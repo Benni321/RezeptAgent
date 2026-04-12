@@ -94,6 +94,3 @@ RezeptAgent/
 └── .env.example
 ```
 
-## Anforderungserfüllung
-
-Siehe [docs/bewertungsmatrix.md](docs/bewertungsmatrix.md) für den vollständigen Überblick.
