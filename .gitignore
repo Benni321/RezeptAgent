@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Chroma DB (lokal)
+app/rag/chroma_db/
+
+# Logs
+*.log
+logs/
+
+# Entwicklungstools (nicht Teil des Projekts)
+.claude/
+.DS_Store
+
+# Noch nicht implementierte Module (kommen in Phase 2/3)
+app/rag/
+app/api/
+tests/
+docs/evidence/
+
+# Vorlesungsunterlagen und Aufgabenstellung
+docs/Bisherige Vorlesungsinhalte/
+semesterprojekt.md
+docs/bewertungsmatrix.md
+docs/phasenplan.md
+docs/Abstract.md
+
+# Sonstiges
+https:/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
