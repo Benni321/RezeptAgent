@@ -1,0 +1,25 @@
+name: CI
+
+# Automatischer Schritt bei jedem Push / Pull Request (W10):
+# Abhaengigkeiten installieren und die Testsuite ausfuehren.
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Abhaengigkeiten installieren
+        run: pip install -r requirements.txt
+
+      - name: Tests ausfuehren
+        run: pytest -q
