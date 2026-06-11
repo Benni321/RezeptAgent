@@ -12,12 +12,24 @@ fastapi>=0.115.0
 uvicorn>=0.32.0
 python-multipart>=0.0.12
 
+# GUI (Phase 3)
+streamlit>=1.39.0
+requests>=2.32.0
+
+# Vision / Bildverarbeitung (W2)
+pillow>=10.4.0
+
 # Validation
 pydantic>=2.9.0
 
-# RAG (Phase 2)
+# RAG (Phase 2b)
 chromadb>=0.5.0
+sentence-transformers>=3.0.0
 langchain-chroma>=0.1.0
 
 # Utilities
 python-dotenv>=1.0.0
+
+# Tests / CI (W8, W10)
+pytest>=8.3.0
+httpx>=0.27.0

@@ -1,0 +1,8 @@
+Abstract
+In unserem Projekt entwickeln wir einen Rezept-Agenten. Dieser soll Nutzern dabei helfen, passende Rezepte zu finden. Das System soll nicht nur einfache Vorschläge machen, sondern mehrere spezialisierte Agenten nutzen, die zusammenarbeiten.
+Das System verarbeitet multimodale Eingaben: Nutzer können Essenswünsche und Zutaten als Text eingeben oder ein Foto ihres Kühlschranks hochladen. Auf Basis dieser Informationen recherchiert das System selbstständig im Internet nach passenden Rezepten oder generiert bei ausbleibenden Treffern eigene Vorschläge direkt über das Sprachmodell. 
+Ein weiterer geplanter Bestandteil ist eine Funktion, mit der Nutzer auswählen können, ob nur mit den Zutaten gekocht werden soll, die bereits zuhause vorhanden sind, oder ob auch fehlende Zutaten vorgeschlagen und in eine Einkaufsliste übernommen werden dürfen.
+
+Technisch basiert das System auf einem Multi-Agent-Setup, in dem ein Orchestrator-Agent die Verarbeitungslogik und Ausgabe steuert und spezialisierte Subagenten für Bildanalyse, Rezeptrecherche, Filter-Agent und Co. zuständig sind. Entscheidungen werden iterativ im Sinne eines TAO-Zyklus getroffen, wobei externe Tools wie Web-Search-APIs und Vision-Modelle aktiv eingebunden werden. 
+Ggfs. wird primär auf eine gängige/beliebte Rezeptwebsite (wie z.B. Chefkoch.de) zugegriffen und danach weitere Web-Searches durchgeführt, falls geeignete API-Schnittstellen zur Verfügung stehen, um den Ablauf zu stabilisieren.
+Insgesamt soll unser Projekt zeigen, wie ein praxisnahes AI-System mit mehreren Agenten, Tool-Nutzung und einer Kombination aus Websuche und eigener Wissensbasis umgesetzt werden kann. Dabei ist uns wichtig, dass das Projekt technisch interessant ist, aber trotzdem realistisch und gut umsetzbar bleibt.

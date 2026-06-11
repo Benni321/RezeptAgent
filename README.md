@@ -19,12 +19,16 @@ Nutzer
   │
   ▼
 Orchestrator-Agent (LangGraph ReAct)
-  ├── web_search     → Rezeptsuche im Internet (Tavily)
-  ├── vision_tool    → Kühlschrank-Foto → Zutatenliste (Phase 2)
-  ├── rag_retriever  → Suche in lokaler Rezept-Wissensbasis (Phase 2)
-  ├── filter_tool    → Rezepte nach Zutaten filtern (Phase 2)
-  └── shopping_list  → Fehlende Zutaten → Einkaufsliste (Phase 2)
+  ├── recherche_rezepte      → Sub-Agent: Web-Rezeptrecherche (Tavily)   [W1]
+  ├── einkaufsliste_erstellen → fehlende Zutaten → Einkaufsliste
+  ├── rag_retriever          → lokale Rezept-Wissensbasis (Phase 2b)     [W3/W4]
+  └── vision_tool            → Kühlschrank-Foto → Zutatenliste (Phase 2c) [W2]
 ```
+
+Der Orchestrator ("Manager") delegiert die Web-Recherche an einen **eigenen
+Sub-Agenten** (`recherche_rezepte`), der in isoliertem Kontext sucht und nur eine
+kompakte Rezeptliste zurückgibt — so bleibt der Orchestrator-Kontext schlank
+(Multi-Agent-Prinzip aus VL4).
 
 Der Agent arbeitet im **TAO-Zyklus** (Thought → Action → Observation),
 der vollständig im Terminal ausgegeben wird.
@@ -48,7 +52,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # Dann .env öffnen und API-Keys eintragen:
-# OPENAI_API_KEY=sk-...
+# GROQ_API_KEY=gsk-...
 # TAVILY_API_KEY=tvly-...
 ```
 
@@ -56,10 +60,28 @@ API-Keys besorgen (beide kostenlos):
 - Groq: https://console.groq.com
 - Tavily: https://tavily.com
 
-### 3. Agent starten
+### 3. Starten
 
+**Variante A — Terminal (CLI):**
 ```bash
 python main.py
+```
+
+**Variante B — API + grafische Oberfläche (empfohlen):**
+```bash
+uvicorn app.api.main:app --reload     # Terminal 1: Backend (http://localhost:8000)
+streamlit run streamlit_app.py        # Terminal 2: GUI (http://localhost:8501)
+```
+
+**Variante C — alles containerisiert:**
+```bash
+docker compose up        # startet API (8000) + GUI (8501)
+```
+
+### Tests
+
+```bash
+pytest -q
 ```
 
 ## Beispiel
@@ -79,18 +101,26 @@ Du: Was kann ich mit Hähnchen, Zitrone und Knoblauch kochen?
 ```
 RezeptAgent/
 ├── app/
-│   ├── agents/orchestrator.py   # LangGraph ReAct Agent
-│   ├── tools/web_search.py      # Web-Suche via Tavily
-│   ├── rag/                     # RAG-Komponente (Phase 2)
-│   └── api/                     # FastAPI Endpunkte (Phase 3)
-├── tests/                       # Unit- und Integrationstests (Phase 3)
-├── docs/
-│   ├── evidence/                # TAO-Traces, Screenshots
-│   ├── Abstract.md
-│   ├── bewertungsmatrix.md
-│   └── phasenplan.md
-├── main.py                      # Einstiegspunkt
-├── requirements.txt
-└── .env.example
+│   ├── agents/
+│   │   ├── orchestrator.py      # Manager-Agent (LangGraph ReAct)        [W1]
+│   │   └── recherche_agent.py   # Recherche-Sub-Agent (Web)             [W1]
+│   ├── tools/
+│   │   ├── web_search.py        # Web-Suche via Tavily
+│   │   ├── shopping_list.py     # Einkaufsliste (deterministisch)
+│   │   └── vision.py            # Foto → Zutaten (Groq VLM)             [W2]
+│   ├── core/
+│   │   ├── agent_service.py     # zentrale Ausführung + TAO-Trace
+│   │   └── logging_config.py    # strukturiertes JSON-Logging           [W5]
+│   ├── api/
+│   │   ├── main.py              # FastAPI: /chat, /health          [W6/W11]
+│   │   └── schemas.py           # Pydantic-Validierung                  [W9]
+│   └── rag/retriever.py         # RAG-Andockstelle (Phase 2b)        [W3/W4]
+├── streamlit_app.py             # grafische Oberfläche (GUI)
+├── tests/                       # Unit-/Integrationstests               [W8]
+├── docs/                        # Plan, Matrix, Handover, Reflexionen
+├── Dockerfile, docker-compose.yml                                       # [W7]
+├── .github/workflows/ci.yml                                             # [W10]
+├── main.py                      # CLI-Einstiegspunkt
+└── requirements.txt
 ```
 
