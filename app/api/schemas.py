@@ -31,7 +31,17 @@ class ChatAnfrage(BaseModel):
     filter: list[str] = Field(
         default_factory=list,
         max_length=10,
-        description="Optionale Vorgaben wie 'vegetarisch', 'schnell', 'glutenfrei'.",
+        description="Harte Vorgaben fuer DIESE Anfrage (Diaet/Tempo): 'vegetarisch', 'schnell', 'glutenfrei'.",
+    )
+    anmerkungen: str = Field(
+        default="",
+        max_length=500,
+        description="Freitext-Sonderwuensche, die in keine Liste passen, z. B. 'wenig Fleisch', 'keine Pilze'.",
+    )
+    geschmack_heute: list[str] = Field(
+        default_factory=list,
+        max_length=10,
+        description="Geschmacksrichtung NUR fuer diese Anfrage (Default aus dem Profil), z. B. 'suesslich'.",
     )
 
 

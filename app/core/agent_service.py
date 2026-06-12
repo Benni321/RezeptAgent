@@ -17,6 +17,7 @@ from langchain_core.messages import HumanMessage
 
 from app.agents.orchestrator import create_orchestrator
 from app.core.logging_config import get_logger, log_ereignis
+from app.core import praeferenzen
 from app.tools.vision import erkenne_zutaten_aus_bild
 
 logger = get_logger("rezeptagent.service")
@@ -25,8 +26,15 @@ logger = get_logger("rezeptagent.service")
 SUB_AGENTEN = {"recherche_rezepte"}
 
 
-def _baue_eingabe(nachricht: str, modus: str, filter_: list[str]) -> str:
-    """Setzt aus Nachricht, Modus und Filtern eine eindeutige Orchestrator-Eingabe zusammen."""
+def _baue_eingabe(nachricht: str, modus: str, harte_vorgaben: list[str], anmerkungen: str = "") -> str:
+    """Setzt aus Nachricht, Modus, harten Vorgaben und Freitext eine eindeutige Orchestrator-Eingabe zusammen.
+
+    Bewusste Abgrenzung der Eingabekanaele (siehe README):
+      - harte_vorgaben = MUSS erfuellt sein: Ernaehrung/Unvertraeglichkeit (vegan,
+        glutenfrei ...) aus dem Profil, plus evtl. uebergebene Vorgaben.
+      - anmerkungen    = freie, einmalige Sonderwuensche -> beruecksichtigen.
+      - (Geschmack = weiche Pro-Rezept-/Profil-Vorgabe, wird separat injiziert.)
+    """
     teile = [nachricht.strip()]
     if modus == "vorhanden":
         teile.append(
@@ -36,8 +44,13 @@ def _baue_eingabe(nachricht: str, modus: str, filter_: list[str]) -> str:
         )
     elif modus == "einkaufsliste":
         teile.append("Modus: Fehlende Zutaten duerfen ergaenzt und als Einkaufsliste ausgegeben werden.")
-    if filter_:
-        teile.append("Beruecksichtige diese Vorgaben: " + ", ".join(filter_) + ".")
+    if harte_vorgaben:
+        teile.append(
+            "Diese Vorgaben MUESSEN erfuellt sein (Ernaehrung/Unvertraeglichkeit): "
+            + ", ".join(harte_vorgaben) + "."
+        )
+    if anmerkungen.strip():
+        teile.append("Zusaetzliche Wuensche des Nutzers: " + anmerkungen.strip())
     return "\n".join(teile)
 
 
@@ -45,6 +58,8 @@ def run_rezept_agent(
     nachricht: str,
     modus: str = "einkaufsliste",
     filter_: Optional[list[str]] = None,
+    anmerkungen: str = "",
+    geschmack_heute: Optional[list[str]] = None,
     image_bytes: Optional[bytes] = None,
     image_mime: str = "image/jpeg",
 ) -> dict:
@@ -66,8 +81,38 @@ def run_rezept_agent(
         if erkannte_zutaten:
             nachricht = f"{nachricht}\nLaut Foto habe ich folgende Zutaten: {', '.join(erkannte_zutaten)}".strip()
 
-    eingabe = _baue_eingabe(nachricht, modus, filter_)
-    log_ereignis(logger, "anfrage_empfangen", modus=modus, hat_bild=bool(image_bytes), anzahl_filter=len(filter_))
+    profil = praeferenzen.lade()
+
+    # Harte Vorgaben = dauerhafte Ernaehrung/Unvertraeglichkeit aus dem Profil
+    # (gilt bei JEDER Anfrage) plus evtl. uebergebene Vorgaben. MUSS erfuellt sein.
+    harte_vorgaben = list(filter_) + profil.get("ernaehrung", [])
+    eingabe = _baue_eingabe(nachricht, modus, harte_vorgaben, anmerkungen)
+
+    # Personalisierung (siehe app/core/praeferenzen.py / README):
+    #  - Geschmacksrichtung: pro Rezept gewaehlt, faellt sonst auf die dauerhafte
+    #    Tendenz aus dem Profil zurueck (Standard). Bewusst als WEICHE Vorgabe.
+    #  - dauerhaftes Signal (Prioritaeten + Bewertungen) wird als Kontext injiziert,
+    #    nicht per Tool abgefragt.
+    geschmack = geschmack_heute or profil["geschmack"]
+    if geschmack:
+        eingabe += (
+            "\nGewuenschte Geschmacksrichtung (weiche Vorgabe, Standard aus Profil): "
+            + ", ".join(geschmack) + "."
+        )
+
+    praeferenz_text = praeferenzen.als_kontext_text()
+    if praeferenz_text:
+        eingabe += f"\n{praeferenz_text}"
+
+    log_ereignis(
+        logger,
+        "anfrage_empfangen",
+        modus=modus,
+        hat_bild=bool(image_bytes),
+        anzahl_filter=len(filter_),
+        hat_geschmack=bool(geschmack),
+        hat_praeferenzen=bool(praeferenz_text),
+    )
 
     # 2) Orchestrator ausfuehren und TAO-Trace mitschneiden.
     agent = create_orchestrator()

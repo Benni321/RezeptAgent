@@ -23,6 +23,9 @@ env/
 # Chroma DB (lokal)
 app/rag/chroma_db/
 
+# Laufzeit-Daten: persoenliche Praeferenzen (Geschmack + Bewertungen)
+data/praeferenzen.json
+
 # Logs
 *.log
 logs/

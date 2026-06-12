@@ -24,6 +24,7 @@ from pydantic import ValidationError
 from app.api.schemas import ChatAnfrage, ChatAntwort, ERLAUBTE_BILDTYPEN
 from app.core.agent_service import run_rezept_agent
 from app.core.logging_config import get_logger, log_ereignis
+from app.core import praeferenzen
 
 logger = get_logger("rezeptagent.api")
 
@@ -45,13 +46,22 @@ async def chat(
     nachricht: str = Form(...),
     modus: str = Form("einkaufsliste"),
     filter: str = Form(""),
+    anmerkungen: str = Form(""),
+    geschmack_heute: str = Form(""),
     bild: UploadFile | None = File(None),
 ) -> ChatAntwort:
     """Nimmt eine Nutzeranfrage (Text + optional Foto) entgegen und ruft den Agenten."""
     # 1) Text-Eingaben validieren (W9) -- Pydantic prueft Laenge/Modus/Filter.
     filter_liste = [f.strip() for f in filter.split(",") if f.strip()]
+    geschmack_liste = [g.strip() for g in geschmack_heute.split(",") if g.strip()]
     try:
-        anfrage = ChatAnfrage(nachricht=nachricht, modus=modus, filter=filter_liste)
+        anfrage = ChatAnfrage(
+            nachricht=nachricht,
+            modus=modus,
+            filter=filter_liste,
+            anmerkungen=anmerkungen,
+            geschmack_heute=geschmack_liste,
+        )
     except ValidationError as exc:
         log_ereignis(logger, "validierung_fehlgeschlagen", anzahl_fehler=len(exc.errors()))
         raise HTTPException(status_code=422, detail=exc.errors())
@@ -78,6 +88,8 @@ async def chat(
             nachricht=anfrage.nachricht,
             modus=anfrage.modus,
             filter_=anfrage.filter,
+            anmerkungen=anfrage.anmerkungen,
+            geschmack_heute=anfrage.geschmack_heute,
             image_bytes=image_bytes,
             image_mime=image_mime,
         )
@@ -89,3 +101,47 @@ async def chat(
         )
 
     return ChatAntwort(**ergebnis)
+
+
+# --- Praeferenzen (Memory: Geschmack + Bewertungen) -----------------------------
+# Schreiben ist eine deterministische Aktion (kein Agenten-Reasoning), daher hier
+# als schlanke Endpunkte statt als Tool -- siehe app/core/praeferenzen.py.
+
+@app.get("/praeferenzen")
+def praeferenzen_lesen() -> dict:
+    """Gibt das gespeicherte Geschmacksprofil + die Bewertungen zurueck (fuer die GUI)."""
+    return praeferenzen.lade()
+
+
+@app.post("/praeferenzen")
+def profil_setzen(
+    ernaehrung: str = Form(""),
+    geschmack: str = Form(""),
+    wichtig: str = Form(""),
+) -> dict:
+    """Setzt das dauerhafte Profil (Ernaehrung + Geschmacks-Tendenz + Prioritaeten).
+
+    Alle Felder sind kommagetrennte Tag-Listen. Markiert das Onboarding als erledigt.
+    """
+    ernaehrung_tags = [t.strip() for t in ernaehrung.split(",") if t.strip()]
+    geschmack_tags = [t.strip() for t in geschmack.split(",") if t.strip()]
+    wichtig_tags = [t.strip() for t in wichtig.split(",") if t.strip()]
+    daten = praeferenzen.setze_profil(geschmack_tags, wichtig_tags, ernaehrung_tags)
+    log_ereignis(
+        logger,
+        "profil_gesetzt",
+        anzahl_ernaehrung=len(daten["ernaehrung"]),
+        anzahl_geschmack=len(daten["geschmack"]),
+        anzahl_wichtig=len(daten["wichtig"]),
+    )
+    return daten
+
+
+@app.post("/bewertung")
+def bewertung_speichern(rezept: str = Form(...), sterne: int = Form(...)) -> dict:
+    """Speichert eine Rezept-Bewertung (1..5 Sterne)."""
+    if not rezept.strip():
+        raise HTTPException(status_code=422, detail="Rezeptname darf nicht leer sein.")
+    daten = praeferenzen.speichere_bewertung(rezept, sterne)
+    log_ereignis(logger, "bewertung_gespeichert", sterne=max(1, min(5, sterne)))
+    return daten
