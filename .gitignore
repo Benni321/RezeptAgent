@@ -23,6 +23,9 @@ env/
 # Chroma DB (lokal)
 app/rag/chroma_db/
 
+# Laufzeit-Daten: persoenliche Praeferenzen (Geschmack + Bewertungen)
+data/praeferenzen.json
+
 # Logs
 *.log
 logs/
@@ -31,18 +34,14 @@ logs/
 .claude/
 .DS_Store
 
-# Noch nicht implementierte Module (kommen in Phase 2/3)
-app/rag/
-app/api/
-tests/
-docs/evidence/
+# Hinweis: app/rag/, app/api/, tests/ und docs/ werden BEWUSST versioniert
+# (sie sind Teil der Abgabe). Nur die generierte Vektor-DB bleibt ignoriert
+# (siehe app/rag/chroma_db/ oben).
 
-# Vorlesungsunterlagen und Aufgabenstellung
+# Vorlesungsunterlagen und Aufgabenstellung (Material des Profs, nicht weiterverbreiten)
 docs/Bisherige Vorlesungsinhalte/
 semesterprojekt.md
-docs/bewertungsmatrix.md
-docs/phasenplan.md
-docs/Abstract.md
+semesterprojekt_anleitung*.pdf
 
 # Sonstiges
 https:/
