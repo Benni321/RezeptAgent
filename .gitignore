@@ -25,6 +25,8 @@ app/rag/chroma_db/
 
 # Laufzeit-Daten: persoenliche Praeferenzen (Geschmack + Bewertungen)
 data/praeferenzen.json
+# Laufzeit-Daten: aus Bewertungen GELERNTE Kochbuch-Rezepte (Seeds bleiben versioniert)
+data/rezepte/gelernt_*.json
 
 # Logs
 *.log

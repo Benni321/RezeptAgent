@@ -1,5 +1,14 @@
 # Übergabe-Notiz — Stand Phase 2a
 
+> **⚠️ ÜBERHOLT (Update 2026-07-15):** Dieses Dokument ist eine historische
+> Übergabe-Notiz. Der hier beschriebene RAG-Plan (Teampartner, Chroma +
+> Embedding-Modell, `app/rag/`) wurde **verworfen und ersetzt** durch das
+> **Kochbuch-RAG** (`app/tools/kochbuch.py`: BM25 über die aus 4+-Sterne-
+> Bewertungen gelernte Rezeptbasis, kein Modell-Download). W3/W4 sind damit
+> erfüllt — Begründung in der README („Kochbuch-RAG“), Status in
+> [bewertungsmatrix.md](bewertungsmatrix.md). Der Rest der Notiz bleibt als
+> zeitgeschichtliches Dokument unverändert stehen.
+
 *Stand: 2026-06-02 abends. Für: Teampartner (übernimmt Phase 2b = RAG).*
 
 ## TL;DR

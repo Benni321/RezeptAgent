@@ -62,3 +62,31 @@ def test_bewertung_leerer_name_wird_abgelehnt(monkeypatch, tmp_path):
     monkeypatch.setattr(praeferenzen, "_DEFAULT_PFAD", str(tmp_path / "p.json"))
     antwort = client.post("/bewertung", data={"rezept": "   ", "sterne": 3})
     assert antwort.status_code == 422
+
+
+def test_gute_bewertung_landet_im_kochbuch(monkeypatch, tmp_path):
+    # >= 4 Sterne + Antworttext mit Zutatenliste -> Rezept wandert in die
+    # RAG-Wissensbasis (W3/W13: Kochbuch lernt aus Bewertungen).
+    monkeypatch.setattr(praeferenzen, "_DEFAULT_PFAD", str(tmp_path / "p.json"))
+    monkeypatch.setenv("KOCHBUCH_DIR", str(tmp_path / "rezepte"))
+    antwort = client.post("/bewertung", data={
+        "rezept": "Shakshuka", "sterne": 5,
+        "antwort_text": "Zutaten:\n- 4 Eier\n- 1 Paprika\nZubereitung:\n1. anbraten",
+    })
+    assert antwort.status_code == 200
+    assert antwort.json()["im_kochbuch"] is True
+    from app.tools import kochbuch
+    assert [r["titel"] for r in kochbuch.lade_alle()] == ["Shakshuka"]
+
+
+def test_schlechte_bewertung_landet_nicht_im_kochbuch(monkeypatch, tmp_path):
+    monkeypatch.setattr(praeferenzen, "_DEFAULT_PFAD", str(tmp_path / "p.json"))
+    monkeypatch.setenv("KOCHBUCH_DIR", str(tmp_path / "rezepte"))
+    antwort = client.post("/bewertung", data={
+        "rezept": "Fader Eintopf", "sterne": 2,
+        "antwort_text": "Zutaten:\n- Kartoffeln",
+    })
+    assert antwort.status_code == 200
+    assert antwort.json()["im_kochbuch"] is False
+    from app.tools import kochbuch
+    assert kochbuch.lade_alle() == []

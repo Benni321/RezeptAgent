@@ -1,0 +1,50 @@
+{
+  "id": "leere_suche_fallback",
+  "beschreibung": "Fehlerfall: Suche nach Fantasie-Zutaten laeuft ins Leere. Erwartet: Agent erkennt den Fehlschlag und faellt TRANSPARENT auf eigenes Wissen zurueck oder sagt ehrlich, dass nichts gefunden wurde - statt Treffer zu erfinden.",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Was kann ich mit Quargelbrumsel und Fizzelkraut kochen?",
+    "modus": "einkaufsliste"
+  },
+  "profil": null,
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "Da keine passenden Rezepte für Quargelbrumsel und Fizzelkraut gefunden wurden, schlage ich ein selbst zusammengestelltes Gericht vor, basierend auf ähnlichen Zutaten:\n\n**Quargelbrumsel-Fizzelkraut-Eintopf**  \n*(Eigene Kreation)*  \n**Zutaten** (für 2 Portionen):  \n- 200g Quargelbrumsel (oder Quark als Ersatz)  \n- 300g Fizzelkraut (oder Sauerkraut)  \n- 1 Zwiebel  \n- 1 Karotte  \n- 1 Stange Lauch  \n- 500ml Gemüsebrühe  \n- 1 EL Rapsöl  \n- Salz, Pfeffer, Majoran  \n\n**Zubereitung**:  \n1. Zwiebel, Karotte und Lauch fein hacken. In Rapsöl andünsten.  \n2. Fizzelkraut hinzufügen und 5 Minuten mitdünsten.  \n3. Brühe angießen, aufkochen und 15 Minuten köcheln lassen.  \n4. Quargelbrumsel unterheben, mit Salz, Pfeffer und Majoran abschmecken.  \n\n**Einkaufsliste** (fehlende Zutaten):  \n- Zwiebel  \n- Karotte  \n- Lauch  \n- Gemüsebrühe  \n- Rapsöl  \n- Majoran  \n\nHinweis: Quargelbrumsel und Fizzelkraut wurden als vorhanden angenommen. Bei Abweichungen bitte anpassen.",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Rezepte mit Quargelbrumsel und Fizzelkraut"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "Keine passenden Rezepte aus der Websuche gefunden."
+    }
+  ],
+  "checks": [
+    {
+      "typ": "antwort_nicht_leer",
+      "status": "bestanden",
+      "detail": "960 Zeichen"
+    },
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "recherche_rezepte: 1x aufgerufen"
+    },
+    {
+      "typ": "erwaehnt_eines",
+      "status": "bestanden",
+      "detail": "gefunden: ['keine passenden']"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 55.3
+}

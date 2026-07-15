@@ -1,0 +1,77 @@
+{
+  "id": "portionen_skalierung",
+  "beschreibung": "Harter Constraint: Personenzahl. Skalierung MUSS ueber portionen_skalieren laufen (kein Kopfrechnen); Stichprobe: 400g*3=1200, 2*3=6, 300g*3=900, 1/2 TL*3=1,5. Keine Recherche noetig (situationsabhaengige Tool-Wahl).",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Ich habe ein Rezept fuer 2 Personen: 400g Reis, 2 Zwiebeln, 300g Gemuese, 1/2 TL Salz. Rechne mir die Mengen fuer 6 Personen um.",
+    "modus": "einkaufsliste"
+  },
+  "profil": null,
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "**Rezept fuer 6 Personen:**  \n- **1200g Reis**  \n- **6 Zwiebeln**  \n- **900g Gemuese**  \n- **1,5 TL Salz**  \n\n**Einkaufsliste (alle Zutaten fehlen):**  \n- 1200g Reis  \n- 6 Zwiebeln  \n- 900g Gemuese  \n- 1,5 TL Salz  \n\n*Hinweis: Die Mengen wurden exakt fuer 6 Portionen umgerechnet. Fuer eine Naehrwert-Pruefung oder Anpassung an Kalorien-/Ernaehrungsvorgaben wuerde ein weiterer Schritt mit dem naehrwerte_schaetzen-Tool benoetigt.*",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "portionen_skalieren",
+      "args": {
+        "auf_portionen": 6,
+        "von_portionen": 2,
+        "zutaten": [
+          "400g Reis",
+          "2 Zwiebeln",
+          "300g Gemuese",
+          "1/2 TL Salz"
+        ]
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "portionen_skalieren",
+      "inhalt": "Zutaten skaliert von 2 auf 6 Portionen (Faktor 3):\n- 1200g Reis\n- 6 Zwiebeln\n- 900g Gemuese\n- 1,5 TL Salz"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "args": {
+        "benoetigte_zutaten": [
+          "1200g Reis",
+          "6 Zwiebeln",
+          "900g Gemuese",
+          "1,5 TL Salz"
+        ],
+        "vorhandene_zutaten": []
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "inhalt": "Einkaufsliste (fehlende Zutaten):\n- 1200g Reis\n- 6 Zwiebeln\n- 900g Gemuese\n- 1,5 TL Salz"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "portionen_skalieren: 1x aufgerufen"
+    },
+    {
+      "typ": "tool_nicht_aufgerufen",
+      "status": "bestanden",
+      "detail": "recherche_rezepte: nicht aufgerufen"
+    },
+    {
+      "typ": "erwaehnt_alle",
+      "status": "bestanden",
+      "detail": "alle 4 Begriffe enthalten"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 80.2
+}

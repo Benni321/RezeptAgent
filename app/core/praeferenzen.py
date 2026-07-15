@@ -9,7 +9,7 @@ Persistiert Nutzer-Praeferenzen ueber Sessions hinweg:
   - bewertungen:     Rezept -> Sterne (1-5), das gelernte Signal.
   - onboarding_done: ob die anfaengliche Fragerunde durchlaufen wurde.
 
-Designentscheidungen (bewusst -- in der README begruendet):
+Designentscheidungen (bewusst -- in docs/PROJEKTDOKU.md begruendet):
 - PROFIL = STANDARD, PRO REZEPT UEBERSCHREIBBAR. Die dauerhafte Geschmacks-Tendenz
   ist nur die Vorbelegung; fuer die einzelne Anfrage waehlt der Nutzer neu (mal
   Lust auf Suesses). So ist Geschmack weder rein dauerhaft noch wird er doppelt

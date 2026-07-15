@@ -1,0 +1,73 @@
+{
+  "id": "konflikt_salami_vegetarisch",
+  "beschreibung": "Randfall: Tageswunsch (Salami) widerspricht der harten Profil-Vorgabe (vegetarisch). Der Agent muss den Konflikt ansprechen; Salami darf nicht in der Zutatenliste landen.",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Ich haette heute richtig Lust auf Pizza mit Salami.",
+    "modus": "einkaufsliste"
+  },
+  "profil": {
+    "ernaehrung": [
+      "vegetarisch"
+    ],
+    "geschmack": [],
+    "wichtig": [],
+    "bewertungen": {}
+  },
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "Hier ist ein passendes vegetarisches Pizza-Rezept für Sie:\n\n**Vegetarische Pizza mit Tomatensauce & Gemüse**  \n**Zutaten (für 2 Portionen):**  \n- 1 Pizza-Teig (ca. 300g)  \n- 200g Tomatensauce  \n- 100g Mozzarella (gewiegen)  \n- 1/2 Paprika (rot/gelb)  \n- 100g Champignons  \n- 50g Oliven (schwarz/rot)  \n- Salz & Pfeffer nach Geschmack  \n\n**Zubereitung:**  \n1. Ofen auf 220°C (Umluft) vorheizen.  \n2. Teig auf Backpapier ausrollen und mit Tomatensauce bestreichen.  \n3. Mozzarella in Scheiben schneiden und darauf verteilen.  \n4. Paprika in Streifen, Champignons in Scheiben schneiden und darauf platzieren.  \n5. Oliven darauf verteilen.  \n6. 12–15 Minuten backen, bis der Rand goldbraun ist.  \n\n**Einkaufsliste (fehlende Zutaten):**  \n- Tomatensauce  \n- Mozzarella  \n- Paprika  \n- Champignons  \n- Oliven  \n\n*Hinweis:* Das Rezept enthält bewusst **keine Salami**, da es Ihre Vorgabe \"vegetarisch\" erfüllen muss. Die Käse-Variante mit Mozzarella ist eine gängige vegetarische Alternative.",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "vegetarische Pizza-Rezepte"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Vegetarische Pizza mit Tomatensauce & Gemüse**  \n   - **Hauptzutaten**: Tomatensauce, Mozzarella, Paprika, Champignons, Oliven  \n   - **Zubereitung**: Teig ausrollen, mit Sauce bestreichen, Gemüse darauf verteilen, bei 220°C 12–15 Min. backen.  \n   - **Quelle**: [vegetarische-pizza-rezept.de](https://www.vegetarische-pizza-rezept.de)  \n\n2. **Mediterrane Pizza mit Feta & Spinat**  \n   - **Hauptzutaten**: Tomaten, Feta-Käse, frischer Spinat, Knoblauch, Olivenöl  \n   - **Zubereitung**: Teig mit Olivenöl bestreichen, Spinat und Feta darauf verteilen, 10–12 Min. backen.  \n   - **Quelle**: [mediterrane-pizza.de](https://www.mediterrane-pizza.de)  \n\n3. **Veganer Gemüsepizza mit Cashew-Käse**  \n   - **Hauptzutaten**: Cashew-Käse (aus Cashew, Leinmehl, Wasser), Zucchini, Cherry-Tomaten, Petersilie  \n   - **Zubereitung**: Cashew-Käse auf den Teig streichen, Gemüse darauf platzieren, 15 Min. backen.  \n   - **Quelle**: [vegan-pizza-ideas.com](https://www.vegan-pizza-ideas.com)"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "args": {
+        "benoetigte_zutaten": [
+          "Tomatensauce",
+          "Mozzarella",
+          "Paprika",
+          "Champignons",
+          "Oliven"
+        ],
+        "vorhandene_zutaten": []
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "inhalt": "Einkaufsliste (fehlende Zutaten):\n- Tomatensauce\n- Mozzarella\n- Paprika\n- Champignons\n- Oliven"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "erwaehnt_eines",
+      "status": "bestanden",
+      "detail": "gefunden: ['vegetarisch']"
+    },
+    {
+      "typ": "verbotene_zutaten",
+      "status": "bestanden",
+      "detail": "18 Listenzeilen geprueft, keine verbotene Zutat"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 86.3
+}

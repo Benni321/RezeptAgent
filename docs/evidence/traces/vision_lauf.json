@@ -1,0 +1,61 @@
+{
+  "trace_id": "8fbd17c4faad",
+  "zeit_start": "2026-07-15T11:02:34",
+  "dauer_ms": 102350,
+  "eingabe": "Was kann ich aus meinem Kühlschrank kochen? Nutze, was auf dem Foto zu sehen ist.\nLaut Foto habe ich folgende Zutaten: Eier, Milch, Käse, Senf, Ketchup, Marmelade, Salat, Bier, Essig, Öl",
+  "modus": "einkaufsliste",
+  "antwort": "**Rezeptvorschlag: Eier-Käse-Salat**  \n**Zutaten**:  \n- 4 Eier (hart gekocht und gewürfelt)  \n- 200g Käse (fein gehobelt)  \n- 1 EL Senf  \n- 2 EL Essig  \n- 1 EL Öl  \n- 1 Gurke (gewürfelt, *Einkaufsliste: Gurken*)  \n- Salz, Pfeffer, Zucker nach Geschmack  \n\n**Zubereitung**:  \n1. Eier hart kochen, abkühlen lassen und in Würfel schneiden.  \n2. Käse fein hobeln, Gurke in kleine Würfel schneiden.  \n3. Senf, Essig, Öl, Salz, Pfeffer und Zucker zu einer Dressing-Mischung rühren.  \n4. Alle Zutaten in eine Schüssel geben, mit der Dressing-Mischung vermengen und servieren.  \n\n**Einkaufsliste**:  \n- Gurken (1 Stück)  \n\n*Hinweis: Das Rezept ist für 2 Portionen angegeben. Bei Bedarf kann es mit `portionen_skalieren` umgerechnet werden.*",
+  "schritte": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Eier, Milch, Käse, Senf, Ketchup, Marmelade, Salat, Bier, Essig, Öl"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Eier-Käse-Salat**  \n   **Hauptzutaten**: Eier, Käse, Senf, Essig, Öl, Gurken  \n   **Zubereitung**:  \n   - Eier hart kochen und klein schneiden.  \n   - Käse fein hobeln.  \n   - Senf, Essig, Öl, Salz, Pfeffer und Zucker zu einer Dressing-Mischung verarbeiten.  \n   - Alle Zutaten vermengen und mit Gurken garnieren.  \n   **Quelle**: [chefkoch.de](https://www.chefkoch.de/rezepte/1285201233849597/Eier-Kaese-Salat.html)  \n\n2. **Eier-Käse-Salat (Variante)**  \n   **Hauptzutaten**: Eier, Käse, Senf, Essig, Olivenöl  \n   **Zubereitung**:  \n   - Eier kochen und in Würfel schneiden.  \n   - Käse in kleine Stücke zerkleinern.  \n   - Senf, Essig, Olivenöl und Gewürze zu einer Marinade rühren.  \n   - Eier, Käse und Dressing gut vermengen.  \n   **Quelle**: [landgemachtes.de](https://www.landgemachtes.de/2016/04/eier-kaese-salat)  \n\n3. **Bunter Vogerlsalat**  \n   **Hauptzutaten**: Vogerlsalat, Eier, Senf, Balsamicoessig, Walnussöl  \n   **Zubereitung**:  \n   - Salat waschen, Karotten und Radieschen hobeln.  \n   - Eier kochen und in Würfel schneiden.  \n   - Dressing aus Senf, Balsamicoessig, Walnussöl und Zucker herstellen.  \n   - Alle Zutaten mischen und servieren.  \n   **Quelle**: [gemuesekiste.\n[... gekuerzt ...]",
+      "dauer_ms": 13204,
+      "status": "ok"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "args": {
+        "benoetigte_zutaten": [
+          "Eier",
+          "Käse",
+          "Senf",
+          "Essig",
+          "Öl",
+          "Gurken"
+        ],
+        "vorhandene_zutaten": [
+          "Eier",
+          "Milch",
+          "Käse",
+          "Senf",
+          "Ketchup",
+          "Marmelade",
+          "Salat",
+          "Bier",
+          "Essig",
+          "Öl"
+        ]
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "inhalt": "Einkaufsliste (fehlende Zutaten):\n- Gurken",
+      "dauer_ms": 1,
+      "status": "ok"
+    }
+  ]
+}

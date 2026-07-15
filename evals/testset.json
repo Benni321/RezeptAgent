@@ -1,0 +1,192 @@
+{
+  "beschreibung": "Offline-Evaluations-Testset fuer den RezeptAgent (VL09). Jeder Fall prueft EIGENSCHAFTEN der Antwort und der Trajektorie, keinen exakten Text. Die Checks werden von evals/verifier.py programmatisch und ternaer (bestanden/neutral/verletzt) ausgewertet.",
+  "faelle": [
+    {
+      "id": "einfach_tomate_mozzarella",
+      "beschreibung": "Einfache Rezeptfrage - gerader Weg: genau EINE Recherche, dann Antwort (System-Prompt: 'hoechstens einmal recherchieren').",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Was kann ich mit Tomaten und Mozzarella kochen?", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "antwort_nicht_leer"},
+        {"typ": "tool_aufgerufen", "name": "recherche_rezepte", "min": 1, "max": 1},
+        {"typ": "tool_nicht_aufgerufen", "name": "naehrwerte_schaetzen"},
+        {"typ": "schrittzahl", "min": 1, "max": 8}
+      ]
+    },
+    {
+      "id": "kcal_limit_einzelrezept",
+      "beschreibung": "Harter Constraint: kcal-Vorgabe beim Einzelrezept. Der Agent MUSS naehrwerte_schaetzen aufrufen (nicht selbst schaetzen), genannte kcal muessen <= Limit sein.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Schlag mir ein Abendessen mit maximal 500 kcal pro Portion vor.", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "antwort_nicht_leer"},
+        {"typ": "tool_aufgerufen", "name": "naehrwerte_schaetzen", "min": 1},
+        {"typ": "kcal_limit", "limit": 500}
+      ]
+    },
+    {
+      "id": "portionen_skalierung",
+      "beschreibung": "Harter Constraint: Personenzahl. Skalierung MUSS ueber portionen_skalieren laufen (kein Kopfrechnen); Stichprobe: 400g*3=1200, 2*3=6, 300g*3=900, 1/2 TL*3=1,5. Keine Recherche noetig (situationsabhaengige Tool-Wahl).",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Ich habe ein Rezept fuer 2 Personen: 400g Reis, 2 Zwiebeln, 300g Gemuese, 1/2 TL Salz. Rechne mir die Mengen fuer 6 Personen um.", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "portionen_skalieren", "min": 1},
+        {"typ": "tool_nicht_aufgerufen", "name": "recherche_rezepte"},
+        {"typ": "erwaehnt_alle", "begriffe": ["1200", "6 Zwiebeln", "900", "1,5"]}
+      ]
+    },
+    {
+      "id": "vegan_profil",
+      "beschreibung": "Harter Constraint aus dem Profil: vegan. In der Zutaten-/Einkaufsliste duerfen keine tierischen Produkte stehen (vegane Varianten wie 'vegane Sahne' sind erlaubt).",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Schlag mir ein cremiges Pasta-Gericht zum Abendessen vor.", "modus": "einkaufsliste"},
+      "profil": {"ernaehrung": ["vegan"], "geschmack": [], "wichtig": [], "bewertungen": {}},
+      "checks": [
+        {"typ": "antwort_nicht_leer"},
+        {"typ": "verbotene_zutaten", "zutaten": ["Sahne", "Parmesan", "Mozzarella", "Butter", "Eier", "Milch", "Speck", "Haehnchen", "Hackfleisch"]},
+        {"typ": "tool_aufgerufen", "name": "recherche_rezepte", "min": 1}
+      ]
+    },
+    {
+      "id": "glutenfrei_profil",
+      "beschreibung": "Harter Constraint aus dem Profil: glutenfrei - bei einer Nudel-Anfrage. Der Agent muss das Thema adressieren und darf keine Gluten-Quellen listen.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Ich moechte heute etwas mit Nudeln kochen.", "modus": "einkaufsliste"},
+      "profil": {"ernaehrung": ["glutenfrei"], "geschmack": [], "wichtig": [], "bewertungen": {}},
+      "checks": [
+        {"typ": "erwaehnt_eines", "begriffe": ["glutenfrei", "ohne Gluten"]},
+        {"typ": "verbotene_zutaten", "zutaten": ["Weizenmehl", "Weizen", "Couscous", "Bulgur", "Seitan"]}
+      ]
+    },
+    {
+      "id": "konflikt_salami_vegetarisch",
+      "beschreibung": "Randfall: Tageswunsch (Salami) widerspricht der harten Profil-Vorgabe (vegetarisch). Der Agent muss den Konflikt ansprechen; Salami darf nicht in der Zutatenliste landen.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Ich haette heute richtig Lust auf Pizza mit Salami.", "modus": "einkaufsliste"},
+      "profil": {"ernaehrung": ["vegetarisch"], "geschmack": [], "wichtig": [], "bewertungen": {}},
+      "checks": [
+        {"typ": "erwaehnt_eines", "begriffe": ["vegetarisch"]},
+        {"typ": "verbotene_zutaten", "zutaten": ["Salami", "Schinken", "Speck"]}
+      ]
+    },
+    {
+      "id": "wochenplan_3_kcal",
+      "beschreibung": "Planungsfall: 3 Gerichte, kcal-Limit, vegetarisches Profil. Trajektorie muss die plan->pruefe->revidiere-Schleife zeigen: je Gericht Recherche + Naehrwert-Check, genau ein deterministischer Abschluss.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Plane mir 3 unterschiedliche Abendessen fuer die Woche, maximal 500 kcal pro Portion, fuer 2 Personen.", "modus": "einkaufsliste"},
+      "profil": {"ernaehrung": ["vegetarisch"], "geschmack": [], "wichtig": [], "bewertungen": {}},
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "recherche_rezepte", "min": 3},
+        {"typ": "tool_aufgerufen", "name": "naehrwerte_schaetzen", "min": 3},
+        {"typ": "tool_aufgerufen", "name": "wochenplan_zusammenstellen", "min": 1, "max": 1},
+        {"typ": "revision_geprueft"},
+        {"typ": "kcal_limit", "limit": 500},
+        {"typ": "schrittzahl", "min": 7, "max": 40}
+      ]
+    },
+    {
+      "id": "wochenplan_ohne_kcal",
+      "beschreibung": "Planungsfall ohne kcal-Vorgabe: situationsabhaengiger Pfad - der Naehrwert-Check darf NICHT laufen (kein Constraint -> kein Check), Abwechslung ueber zwei Recherchen.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur mit Gemuese.", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "recherche_rezepte", "min": 2},
+        {"typ": "tool_nicht_aufgerufen", "name": "naehrwerte_schaetzen"},
+        {"typ": "tool_aufgerufen", "name": "wochenplan_zusammenstellen", "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "leere_suche_fallback",
+      "beschreibung": "Fehlerfall: Suche nach Fantasie-Zutaten laeuft ins Leere. Erwartet: Agent erkennt den Fehlschlag und faellt TRANSPARENT auf eigenes Wissen zurueck oder sagt ehrlich, dass nichts gefunden wurde - statt Treffer zu erfinden.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Was kann ich mit Quargelbrumsel und Fizzelkraut kochen?", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "antwort_nicht_leer"},
+        {"typ": "tool_aufgerufen", "name": "recherche_rezepte", "min": 1},
+        {"typ": "erwaehnt_eines", "begriffe": ["eigenem Wissen", "eigenes Wissen", "nicht gefunden", "nichts gefunden", "keine Rezepte", "keine passenden", "leider", "kenne ich nicht", "nicht bekannt"]}
+      ]
+    },
+    {
+      "id": "modus_vorhanden",
+      "beschreibung": "Randfall Modus 'vorhanden': nur vorhandene Zutaten verwenden - die Einkaufslisten-Maschinerie darf nicht anspringen (situationsabhaengige Tool-Wahl).",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Ich habe nur Eier, Tomaten, Zwiebeln und Brot da. Was kann ich damit kochen?", "modus": "vorhanden"},
+      "profil": null,
+      "checks": [
+        {"typ": "antwort_nicht_leer"},
+        {"typ": "tool_nicht_aufgerufen", "name": "einkaufsliste_erstellen"}
+      ]
+    },
+    {
+      "id": "memory_schlecht_bewertet",
+      "beschreibung": "Memory-Fall: Kuerbissuppe wurde mit 1 Stern bewertet ('eher meiden'). Bei einer Suppen-Anfrage darf der Agent nicht ausgerechnet Kuerbissuppe vorschlagen.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Schlag mir eine Suppe fuer heute Abend vor.", "modus": "einkaufsliste"},
+      "profil": {"ernaehrung": [], "geschmack": [], "wichtig": ["schnell"], "bewertungen": {"Kuerbissuppe": 1}},
+      "checks": [
+        {"typ": "antwort_nicht_leer"},
+        {"typ": "erwaehnt_nicht", "begriffe": ["Kuerbissuppe", "Kuerbis"]}
+      ]
+    },
+    {
+      "id": "favoriten_rag",
+      "beschreibung": "Agentic RAG (W3/W4): Bezug auf Bewaehrtes ('meine gespeicherten Lieblingsrezepte') -> der Agent muss ZUERST im persoenlichen Kochbuch suchen (rag_retriever), nicht im Web, und den Treffer verwenden.",
+      "erwartet_schwer": false,
+      "eingabe": {"nachricht": "Koch mir heute Abend eines meiner gespeicherten Lieblingsrezepte nach - am liebsten das Curry.", "modus": "einkaufsliste"},
+      "profil": null,
+      "kochbuch": [
+        {"titel": "Gemuese-Curry mit Kokosmilch", "zutaten": ["2 Suesskartoffeln", "400ml Kokosmilch", "2 EL rote Currypaste", "200g Reis"], "sterne": 5, "kcal": 540},
+        {"titel": "Linsen-Dal", "zutaten": ["250g rote Linsen", "1 Zwiebel", "1 TL Kurkuma"], "sterne": 4, "kcal": 420}
+      ],
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "rag_retriever", "min": 1},
+        {"typ": "tool_reihenfolge", "zuerst": "rag_retriever", "dann": "recherche_rezepte"},
+        {"typ": "erwaehnt_eines", "begriffe": ["Curry"]}
+      ]
+    },
+    {
+      "id": "schwer_kombi_constraints",
+      "beschreibung": "SCHWERER FALL: 4 Gerichte, vegan UND glutenfrei UND max 400 kcal, 3 Personen, abwechslungsreich. Viele gleichzeitige Constraints - hier erwarten wir Verletzungen (z.B. kcal trotz Revision ueber Limit oder tierische Zutat aus schlecht gefilterter Recherche).",
+      "erwartet_schwer": true,
+      "warum_schwer": "Die Recherche liefert selten Rezepte, die vegan+glutenfrei+kalorienarm zugleich sind; der Workflow revidiert nur EINMAL pro Gericht. Wir erwarten, dass mindestens ein Constraint reisst.",
+      "eingabe": {"nachricht": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen.", "modus": "einkaufsliste"},
+      "profil": {"ernaehrung": ["vegan", "glutenfrei"], "geschmack": [], "wichtig": [], "bewertungen": {}},
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "recherche_rezepte", "min": 4},
+        {"typ": "tool_aufgerufen", "name": "naehrwerte_schaetzen", "min": 4},
+        {"typ": "kcal_limit", "limit": 400},
+        {"typ": "verbotene_zutaten", "zutaten": ["Sahne", "Parmesan", "Butter", "Eier", "Milch", "Haehnchen", "Weizenmehl", "Couscous", "Bulgur", "Seitan"]}
+      ]
+    },
+    {
+      "id": "schwer_skalierung_kette",
+      "beschreibung": "SCHWERER FALL: Zwei-Tool-Kette in EINER Anfrage - Rezept finden, kcal-Limit pruefen UND exakt auf 5 Personen skalieren. Erfahrungsgemaess laesst der Agent einen der beiden Constraint-Schritte aus.",
+      "erwartet_schwer": true,
+      "warum_schwer": "Der Agent muss naehrwerte_schaetzen UND portionen_skalieren in einem Lauf kombinieren; Modelle neigen dazu, die Skalierung 'im Kopf' zu machen oder ganz wegzulassen.",
+      "eingabe": {"nachricht": "Such mir ein Curry-Rezept mit maximal 450 kcal pro Portion und rechne die Zutatenmengen exakt fuer 5 Personen um.", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "naehrwerte_schaetzen", "min": 1},
+        {"typ": "tool_aufgerufen", "name": "portionen_skalieren", "min": 1},
+        {"typ": "kcal_limit", "limit": 450}
+      ]
+    },
+    {
+      "id": "schwer_kcal_tagessumme",
+      "beschreibung": "SCHWERER FALL: Tages-SUMMEN-Constraint (3 Mahlzeiten zusammen max 1200 kcal) statt Pro-Portion-Limit. Der Workflow kennt nur Pro-Portion-Limits - die Summen-Semantik wird voraussichtlich falsch behandelt.",
+      "erwartet_schwer": true,
+      "warum_schwer": "erkenne_wochenplan extrahiert 'kcal_limit pro Portion'; ein Summen-Budget ueber mehrere Mahlzeiten kann es nicht ausdruecken. Erwartung: das Limit wird als 1200/Portion fehlinterpretiert oder ignoriert.",
+      "eingabe": {"nachricht": "Plane mir 3 Mahlzeiten fuer einen Tag (Fruehstueck, Mittag, Abend), die zusammen hoechstens 1200 kcal pro Person haben. Fuer 2 Personen.", "modus": "einkaufsliste"},
+      "profil": null,
+      "checks": [
+        {"typ": "tool_aufgerufen", "name": "naehrwerte_schaetzen", "min": 3},
+        {"typ": "kcal_summe_limit", "limit": 1200}
+      ]
+    }
+  ]
+}

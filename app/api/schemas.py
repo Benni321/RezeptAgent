@@ -54,6 +54,8 @@ class TraceSchritt(BaseModel):
     quelle: Optional[str] = None   # bei Beobachtung: "Tool" / "Sub-Agent"
     args: Optional[dict] = None
     inhalt: Optional[str] = None
+    dauer_ms: Optional[int] = None  # Span-Dauer des Schritts (W5/VL09)
+    status: Optional[str] = None    # "ok" / "fehler" (Fehler-Observation)
 
 
 class ChatAntwort(BaseModel):
@@ -62,3 +64,4 @@ class ChatAntwort(BaseModel):
     antwort: str
     trace: list[TraceSchritt] = Field(default_factory=list)
     erkannte_zutaten: Optional[list[str]] = None
+    trace_id: Optional[str] = None  # verknuepft die Antwort mit den JSON-Logs (W5)

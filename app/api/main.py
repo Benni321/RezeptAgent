@@ -25,6 +25,7 @@ from app.api.schemas import ChatAnfrage, ChatAntwort, ERLAUBTE_BILDTYPEN
 from app.core.agent_service import run_rezept_agent
 from app.core.logging_config import get_logger, log_ereignis
 from app.core import praeferenzen
+from app.tools import kochbuch
 
 logger = get_logger("rezeptagent.api")
 
@@ -138,10 +139,34 @@ def profil_setzen(
 
 
 @app.post("/bewertung")
-def bewertung_speichern(rezept: str = Form(...), sterne: int = Form(...)) -> dict:
-    """Speichert eine Rezept-Bewertung (1..5 Sterne)."""
+def bewertung_speichern(
+    rezept: str = Form(...),
+    sterne: int = Form(...),
+    antwort_text: str = Form(""),
+) -> dict:
+    """Speichert eine Rezept-Bewertung (1..5 Sterne).
+
+    Bei >= 4 Sternen wandert das Rezept zusaetzlich ins persoenliche Kochbuch
+    (RAG-Wissensbasis, W3/W13): Die Zutaten werden heuristisch aus der
+    mitgesendeten Agent-Antwort extrahiert (Listenzeilen vor der Zubereitung).
+    Bewusst ein deterministischer API-Schritt, KEIN Agenten-Tool (VL03:
+    Schreiben ist eine Aktion des Systems, nicht des LLM). Scheitert die
+    Extraktion, wird nur die Bewertung gespeichert (kein falscher Eintrag).
+    """
     if not rezept.strip():
         raise HTTPException(status_code=422, detail="Rezeptname darf nicht leer sein.")
     daten = praeferenzen.speichere_bewertung(rezept, sterne)
     log_ereignis(logger, "bewertung_gespeichert", sterne=max(1, min(5, sterne)))
-    return daten
+
+    im_kochbuch = False
+    if sterne >= 4 and antwort_text.strip():
+        extrakt = kochbuch.rezept_aus_antwort(rezept, antwort_text)
+        if extrakt:
+            kochbuch.speichere_rezept(
+                extrakt["titel"], extrakt["zutaten"],
+                sterne=max(1, min(5, sterne)), kcal=extrakt["kcal"],
+            )
+            im_kochbuch = True
+            log_ereignis(logger, "kochbuch_rezept_gespeichert",
+                         anzahl_zutaten=len(extrakt["zutaten"]))
+    return {**daten, "im_kochbuch": im_kochbuch}

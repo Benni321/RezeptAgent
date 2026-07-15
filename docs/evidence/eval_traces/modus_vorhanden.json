@@ -1,0 +1,45 @@
+{
+  "id": "modus_vorhanden",
+  "beschreibung": "Randfall Modus 'vorhanden': nur vorhandene Zutaten verwenden - die Einkaufslisten-Maschinerie darf nicht anspringen (situationsabhaengige Tool-Wahl).",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Ich habe nur Eier, Tomaten, Zwiebeln und Brot da. Was kann ich damit kochen?",
+    "modus": "vorhanden"
+  },
+  "profil": null,
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "Ich schlage das Rezept **Tomaten-Ei-Brot mit Zwiebeln** vor, das sich mit deinen vorhandenen Zutaten (plus Grundzutaten wie Olivenöl) zubereiten lässt:\n\n**Zutaten**:\n- 2–3 Eier\n- 1–2 Tomaten (gewürfelt)\n- 1 Zwiebel (gehackt)\n- 2–3 Scheiben Brot (in Würfel gehackt)\n- 1 EL Olivenöl\n- Salz, Pfeffer\n\n**Zubereitung**:\n1. Eier in einer Schüssel mit Salz und Pfeffer verquirlen.\n2. Tomatenwürfel und Zwiebeln hinzufügen, gut vermengen.\n3. Brotwürfel untermischen.\n4. Eine Pfanne mit Olivenöl erhitzen und die Masse als Pfannkuchen backen (ca. 3–4 Minuten pro Seite).\n5. Warm servieren.\n\n**Hinweis**: Das Rezept enthält keine zusätzlichen Zutaten außer Olivenöl, das als Grundzutat erlaubt ist. Keine fehlenden Zutaten – du kannst es direkt mit deinem Vorrat kochen.",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Rezepte mit Eiern, Tomaten, Zwiebeln und Brot"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Tomaten-Ei-Brot mit Zwiebeln**  \n   - **Hauptzutaten**: Eier, Tomaten, Zwiebeln, Brot, Olivenöl, Salz, Pfeffer  \n   - **Zubereitung**: Eier mit zerdrückten Tomaten und gehackten Zwiebeln vermengen, mit Salz und Pfeffer würzen. Auf geschnittenem Brot servieren oder als Pfannkuchen backen.  \n   - **Quelle**: [kochkarussell.de](https://www.kochkarussell.de)  \n\n2. **Eier mit Tomaten und Zwiebeln**  \n   - **Hauptzutaten**: Eier, Tomaten, Zwiebeln, Brot, Olivenöl, Knoblauch  \n   - **Zubereitung**: Zwiebeln andünsten, Tomaten hinzufügen und köcheln lassen. Eier unterheben, mit Brot servieren.  \n   - **Quelle**: [lecker.de](https://www.lecker.de)  \n\n3. **Tomaten-Zwiebel-Ei-Pfannkuchen**  \n   - **Hauptzutaten**: Eier, Tomaten, Zwiebeln, Brot, Mehl, Milch  \n   - **Zubereitung**: Brot in Milch einweichen, mit Eiern, Mehl, Tomaten und Zwiebeln zu einem Teig verarbeiten. Pfannkuchen backen.  \n   - **Quelle**: [backfisch.de](https://www.backfisch.de)"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "antwort_nicht_leer",
+      "status": "bestanden",
+      "detail": "760 Zeichen"
+    },
+    {
+      "typ": "tool_nicht_aufgerufen",
+      "status": "bestanden",
+      "detail": "einkaufsliste_erstellen: nicht aufgerufen"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 52.3
+}

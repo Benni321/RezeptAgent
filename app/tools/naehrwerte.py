@@ -9,7 +9,7 @@ waehlen. Das hebt den Agenten von einem festen Ablauf auf situationsabhaengiges
 Entscheiden (Bewertungs-Dimension 2: "reagiert different auf verschiedene
 Eingaben").
 
-Designentscheidungen (bewusst -- ausfuehrlich in der README begruendet):
+Designentscheidungen (bewusst -- ausfuehrlich in docs/PROJEKTDOKU.md begruendet):
 - Die Schaetzung kommt vom LLM, NICHT aus einer verifizierten Naehrwert-DB.
   Grund: Der Kursrahmen ist bewusst kostenlos/reproduzierbar (kein USDA-/
   OpenFoodFacts-Konto); ein LLM liefert fuer Planungs-Constraints brauchbare
@@ -32,6 +32,8 @@ from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_groq import ChatGroq
 
+from app.core.text_utils import entferne_reasoning
+
 load_dotenv()
 
 # Naehrwert-Felder in fester Reihenfolge (Schluessel = JSON, Wert = Anzeigename).
@@ -42,16 +44,32 @@ _FELDER = {
     "fett_g": "Fett",
 }
 
-NAEHRWERT_PROMPT = (
+# Praefix, an dem der Orchestrator (und Tests) eine fehlgeschlagene Schaetzung erkennt.
+FEHLER_PRAEFIX = "NAEHRWERT-FEHLER"
+
+NAEHRWERT_ANWEISUNG = (
     "Schaetze die Naehrwerte des folgenden Gerichts fuer die GESAMTE angegebene "
     "Zutatenmenge (alle Portionen zusammen). Sind keine Mengen angegeben, nimm "
     "haushaltsuebliche Mengen fuer das Gericht an. Antworte AUSSCHLIESSLICH mit "
     "einem JSON-Objekt der Form "
     '{"kcal": <Zahl>, "eiweiss_g": <Zahl>, "kohlenhydrate_g": <Zahl>, '
-    '"fett_g": <Zahl>} -- ohne Einheiten in den Werten, ohne weitere Erklaerung.\n\n'
-    "Gericht: {titel}\n"
-    "Zutaten:\n{zutaten}"
+    '"fett_g": <Zahl>} -- ohne Einheiten in den Werten, ohne weitere Erklaerung.'
 )
+
+
+def _baue_prompt(rezept_titel: str, zutaten: list[str]) -> str:
+    """Setzt den Naehrwert-Prompt aus fester Anweisung + Rezeptdaten zusammen.
+
+    BEWUSST keine str.format()-Nutzung: Die Anweisung enthaelt ein literales
+    JSON-Beispiel mit geschweiften Klammern ('{"kcal": ...}'). str.format() wuerde
+    diese als Platzhalter deuten und mit KeyError abbrechen. Konkatenation ist hier
+    die robuste Loesung und bleibt ohne API-Key testbar.
+    """
+    zutaten_text = "\n".join(f"- {z}" for z in zutaten)
+    # /no_think: schaltet qwen3-Reasoning fuer diese reine JSON-Aufgabe ab -- sonst kann
+    # ein langer <think>-Block die Antwort abschneiden, BEVOR das JSON kommt (dann
+    # scheitert die Schaetzung). Bei Modellen ohne /no_think ist es harmloser Text.
+    return f"{NAEHRWERT_ANWEISUNG}\n\nGericht: {rezept_titel}\nZutaten:\n{zutaten_text}\n/no_think"
 
 
 def _parse_naehrwerte(text: str) -> dict[str, float]:
@@ -111,6 +129,43 @@ def _formatiere(titel: str, portionen: int, gesamt: dict, je_portion: dict) -> s
     )
 
 
+def _hole_schaetzung(rezept_titel: str, zutaten: list[str]) -> dict[str, float] | None:
+    """LLM-Schaetzung der GESAMT-Naehrwerte. Gibt None bei Fehler/unbrauchbarer Antwort.
+
+    Gemeinsamer Kern von naehrwerte_schaetzen (Tool, Text-Ausgabe) und
+    schaetze_kcal_pro_portion (Zahl fuer den Wochenplan-Workflow) -- keine Duplizierung.
+    """
+    model = ChatGroq(
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        temperature=0,
+        max_retries=5,  # transiente 429 (Free-Tier-TPM) automatisch abfangen (W9)
+    )
+    try:
+        antwort = model.invoke([HumanMessage(content=_baue_prompt(rezept_titel, zutaten))])
+    except Exception:  # Schaetzung scheitert -> None (Aufrufer entscheidet, wie er reagiert)
+        return None
+    # Reasoning-Modelle (qwen3) stellen dem JSON einen <think>-Block voran, dessen
+    # geschweifte Klammern den JSON-Parser fehlleiten -> erst entfernen.
+    gesamt = _parse_naehrwerte(entferne_reasoning(antwort.content))
+    # Alle Werte 0.0 => Modellantwort war unbrauchbar. Als Fehler behandeln, NICHT als
+    # "0 kcal" (das wuerde faelschlich als "unter dem Limit" gedeutet).
+    if all(wert == 0.0 for wert in gesamt.values()):
+        return None
+    return gesamt
+
+
+def schaetze_kcal_pro_portion(rezept_titel: str, zutaten: list[str], portionen: int = 2) -> float | None:
+    """Schaetzt die kcal PRO PORTION als Zahl (fuer den Wochenplan-Constraint-Check im Code).
+
+    Gibt None zurueck, wenn die Schaetzung fehlschlaegt -- der Workflow behandelt den
+    kcal-Constraint dann als "nicht pruefbar" statt als erfuellt (siehe wochenplan_workflow).
+    """
+    gesamt = _hole_schaetzung(rezept_titel, zutaten)
+    if gesamt is None:
+        return None
+    return _pro_portion(gesamt, portionen)["kcal"]
+
+
 @tool
 def naehrwerte_schaetzen(rezept_titel: str, zutaten: list[str], portionen: int = 2) -> str:
     """Schaetzt die Naehrwerte eines Rezepts und gibt sie PRO PORTION zurueck.
@@ -126,15 +181,11 @@ def naehrwerte_schaetzen(rezept_titel: str, zutaten: list[str], portionen: int =
     NAEHERUNGEN ohne verifizierte Datenbank -- nutze sie nur zum groben Abgleich
     mit der Vorgabe, nicht als exakte oder diaet-sichere Angabe.
     """
-    model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
-        temperature=0,
-    )
-    prompt = NAEHRWERT_PROMPT.format(
-        titel=rezept_titel,
-        zutaten="\n".join(f"- {z}" for z in zutaten),
-    )
-    antwort = model.invoke([HumanMessage(content=prompt)])
-    gesamt = _parse_naehrwerte(antwort.content)
+    gesamt = _hole_schaetzung(rezept_titel, zutaten)
+    if gesamt is None:
+        return (
+            f"{FEHLER_PRAEFIX}: Konnte die Naehrwerte nicht schaetzen. Behandle eine "
+            f"etwaige kcal-Vorgabe als NICHT geprueft - nimm nicht an, dass sie erfuellt ist."
+        )
     je_portion = _pro_portion(gesamt, portionen)
     return _formatiere(rezept_titel, portionen, gesamt, je_portion)

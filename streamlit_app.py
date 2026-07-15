@@ -219,15 +219,21 @@ if "ergebnis" in st.session_state:
     st.subheader("Wie gut war dieses Rezept?")
     rezept_name = st.text_input("Rezept", value=st.session_state.get("titel", "Rezept"))
     sterne = st.slider("Bewertung (Sterne)", 1, 5, 4)
+    st.caption("Ab 4 Sternen wandert das Rezept in dein persönliches Kochbuch – der Agent kann es dann wiederfinden („koch mir eines meiner Lieblingsrezepte“).")
     if st.button("Bewertung speichern"):
         try:
             antwort_b = requests.post(
                 f"{API_URL}/bewertung",
-                data={"rezept": rezept_name, "sterne": sterne},
+                # antwort_text: daraus extrahiert das Backend die Zutaten fürs Kochbuch (>= 4 Sterne).
+                data={"rezept": rezept_name, "sterne": sterne,
+                      "antwort_text": ergebnis.get("antwort", "")},
                 timeout=5,
             )
             if antwort_b.status_code == 200:
-                st.success(f"Danke! '{rezept_name}' mit {sterne} Sternen gespeichert – fließt künftig in Vorschläge ein.")
+                if antwort_b.json().get("im_kochbuch"):
+                    st.success(f"Danke! '{rezept_name}' ({sterne} Sterne) gespeichert und ins Kochbuch übernommen 📖")
+                else:
+                    st.success(f"Danke! '{rezept_name}' mit {sterne} Sternen gespeichert – fließt künftig in Vorschläge ein.")
             else:
                 st.error(f"Konnte die Bewertung nicht speichern ({antwort_b.status_code}).")
         except requests.RequestException:

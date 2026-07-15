@@ -1,6 +1,16 @@
 """Tests fuer die deterministische Naehrwert-Logik (ohne echten Modellaufruf)."""
 
-from app.tools.naehrwerte import _formatiere, _parse_naehrwerte, _pro_portion
+from app.tools.naehrwerte import _baue_prompt, _formatiere, _parse_naehrwerte, _pro_portion
+
+
+def test_prompt_bau_crasht_nicht_an_json_klammern():
+    # Regression: Der Prompt enthaelt ein literales JSON-Beispiel mit { }.
+    # Frueher lief er durch str.format() -> KeyError '"kcal"'. Muss jetzt
+    # robust bauen und Titel + Zutaten enthalten.
+    prompt = _baue_prompt("Chili sin Carne", ["200g Bohnen", "1 Zwiebel"])
+    assert "Chili sin Carne" in prompt
+    assert "200g Bohnen" in prompt
+    assert '"kcal"' in prompt  # JSON-Beispiel bleibt unversehrt erhalten
 
 
 def test_parse_sauberes_json():

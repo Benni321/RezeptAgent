@@ -5,7 +5,7 @@ Rechnet die Zutatenmengen eines Rezepts exakt auf eine andere Portionszahl um
 (z. B. Rezept fuer 2 -> gewuenscht fuer 4). Damit kann der Agent auf die vom
 Nutzer genannte Personenzahl reagieren, statt nur ein festes Rezept auszugeben.
 
-Designentscheidung (bewusst -- in der README begruendet):
+Designentscheidung (bewusst -- in docs/PROJEKTDOKU.md begruendet):
 - BEWUSST DETERMINISTISCH, kein LLM. Mengen-Arithmetik ("375 g * 1,5") muss exakt
   und reproduzierbar sein; LLMs verrechnen sich hier zuverlaessig. Gleiche
   Begruendung wie shopping_list.py: eine Aufgabe ohne Sprachverstaendnis loest man

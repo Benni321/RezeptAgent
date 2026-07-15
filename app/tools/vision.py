@@ -77,6 +77,7 @@ def erkenne_zutaten_aus_bild(image_bytes: bytes, mime_type: str = "image/jpeg") 
     model = ChatGroq(
         model=os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct"),
         temperature=0,
+        max_retries=5,  # transiente 429 automatisch abfangen (W9)
     )
     nachricht = HumanMessage(
         content=[

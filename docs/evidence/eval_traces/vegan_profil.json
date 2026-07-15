@@ -1,0 +1,57 @@
+{
+  "id": "vegan_profil",
+  "beschreibung": "Harter Constraint aus dem Profil: vegan. In der Zutaten-/Einkaufsliste duerfen keine tierischen Produkte stehen (vegane Varianten wie 'vegane Sahne' sind erlaubt).",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Schlag mir ein cremiges Pasta-Gericht zum Abendessen vor.",
+    "modus": "einkaufsliste"
+  },
+  "profil": {
+    "ernaehrung": [
+      "vegan"
+    ],
+    "geschmack": [],
+    "wichtig": [],
+    "bewertungen": {}
+  },
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "**Rezept: Creamy Vegan One-Pot Pasta**  \n**Zutaten**:  \n- 100g Cashews  \n- 200ml Gemüsebrühe  \n- 1 EL Tomatenpaste  \n- 1 Zwiebel  \n- 2 Knoblauchzehen  \n- 200g Penne-Nudeln  \n- 1 geräucherte Paprika  \n- Salz, Pfeffer, Olivenöl  \n\n**Zubereitung**:  \n1. Cashews mit Brühe und Tomatenpaste pürieren.  \n2. Zwiebel und Knoblauch in Olivenöl anbraten, Nudeln und geräucherte Paprika hinzufügen.  \n3. Mit Brühe ablöschen, köcheln lassen und mit Salz/Pfeffer abschmecken.  \n\n**Einkaufsliste** (alle Zutaten müssen eingekauft werden):  \n- Cashews  \n- Gemüsebrühe  \n- Tomatenpaste  \n- Zwiebel  \n- Knoblauch  \n- Penne-Nudeln  \n- Geräucherte Paprika  \n- Olivenöl  \n\n*Hinweis: Die Nährwerte sind ungefähr (~500 kcal/Portion) und basieren auf einer Schätzung ohne verifizierte Datenbank.*",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "cremiges Pasta-Gericht vegan"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Creamy Vegan One-Pot Pasta**  \n   - **Hauptzutaten**: Cashews, Gemüsebrühe, Tomatenpaste, Zwiebel, Knoblauch, Penne, geräucherte Paprika  \n   - **Zubereitung**: Cashews mit Brühe und Tomatenpaste pürieren. Zwiebel und Knoblauch anbraten, Nudeln und Gewürze hinzufügen, mit Brühe ablöschen und köcheln lassen.  \n   - **Quelle**: [The Recipe Well](https://therecipewell.com/vegan-one-pot-pasta)  \n\n2. **Nudeln mit Paprikasauce**  \n   - **Hauptzutaten**: Zwiebel, Knoblauch, Paprika, Cashews, Kokosmilch, Nudeln  \n   - **Zubereitung**: Cashews mit Kokosmilch und Gewürzen pürieren. Paprika und Zwiebel anbraten, Nudeln hinzufügen und mit der Sauce vermengen.  \n   - **Quelle**: [YouTube-Rezept von Bianca Zapatka](https://www.youtube.com/watch?v=qeC_rmDMPn4)  \n\n3. **Vegane Pasta mit Zitronensoße**  \n   - **Hauptzutaten**: Gemüsebrühe, pflanzliche Sahne, Zitronensaft, Hefeflocken, Nudeln  \n   - **Zubereitung**: Brühe, Sahne und Zitronensaft reduzieren, Hefeflocken unterrühren. Nudeln mit der Soße mischen und servieren.  \n   - **Quelle**: [Zucker&Jagdwurst](https://www.zuckerjagdwurst.com/de/rezepte/vegane-pasta-mit-zitronensosse)"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "antwort_nicht_leer",
+      "status": "bestanden",
+      "detail": "773 Zeichen"
+    },
+    {
+      "typ": "verbotene_zutaten",
+      "status": "bestanden",
+      "detail": "19 Listenzeilen geprueft, keine verbotene Zutat"
+    },
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "recherche_rezepte: 1x aufgerufen"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 69.3
+}

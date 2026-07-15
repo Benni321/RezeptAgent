@@ -1,0 +1,54 @@
+{
+  "id": "memory_schlecht_bewertet",
+  "beschreibung": "Memory-Fall: Kuerbissuppe wurde mit 1 Stern bewertet ('eher meiden'). Bei einer Suppen-Anfrage darf der Agent nicht ausgerechnet Kuerbissuppe vorschlagen.",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Schlag mir eine Suppe fuer heute Abend vor.",
+    "modus": "einkaufsliste"
+  },
+  "profil": {
+    "ernaehrung": [],
+    "geschmack": [],
+    "wichtig": [
+      "schnell"
+    ],
+    "bewertungen": {
+      "Kuerbissuppe": 1
+    }
+  },
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "**Rezeptvorschlag: Süßkartoffelsuppe mit Blumenkohl**  \n**Zutaten**:  \n- 2–3 Süßkartoffeln  \n- 1 Blumenkohl  \n- 1 Zwiebel  \n- 2 Knoblauchzehen  \n- 2 EL Olivenöl  \n- 1 Liter Brühe (Würzmittel oder Gemüsebrühe)  \n- Salz, Pfeffer, eventuell Currypulver  \n\n**Zubereitung**:  \n1. Zwiebel und Knoblauch in Olivenöl anbraten.  \n2. Süßkartoffeln und Blumenkohl hinzufügen, mit Brühe auffüllen.  \n3. 20–25 Minuten köcheln lassen, bis alles weich ist.  \n4. Mit einem Stabmixer pürieren und abschmecken.  \n\n**Einkaufsliste** (falls Zutaten fehlen):  \n- Süßkartoffeln  \n- Blumenkohl  \n- Zwiebel  \n- Knoblauch  \n- Olivenöl  \n- Brühe (Würzmittel)  \n\n**Hinweis**: Das Rezept ist in ~30 Minuten fertig und enthält keine Kürbisse. Bei Bedarf können Gewürze wie Curry oder Chili hinzugefügt werden.",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "schnelle Suppe ohne Kürbis"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Süßkartoffelsuppe mit Blumenkohl**  \n   - **Hauptzutaten**: Süßkartoffeln, Blumenkohl, Zwiebel, Knoblauch, Olivenöl, Brühe  \n   - **Zubereitung**:  \n     - Zwiebel und Knoblauch anbraten.  \n     - Süßkartoffeln und Blumenkohl hinzufügen, mit Brühe auffüllen.  \n     - 20–25 Minuten köcheln lassen, pürieren und abschmecken.  \n   - **Quelle**: [Eine Prise Lecker](https://einepriselecker.de/7-einfache-rezepte-creme-suppen)  \n\n2. **Mediterrane Tomatensuppe**  \n   - **Hauptzutaten**: Tomaten, Zwiebel, Knoblauch, Olivenöl, Petersilie, Brühe  \n   - **Zubereitung**:  \n     - Zwiebel und Knoblauch anbraten, Tomaten hinzufügen.  \n     - Mit Brühe auffüllen, 15 Minuten köcheln lassen.  \n     - Pürieren, mit Olivenöl und Petersilie servieren.  \n   - **Quelle**: [Eine Prise Lecker](https://einepriselecker.de/7-einfache-rezepte-creme-suppen)"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "antwort_nicht_leer",
+      "status": "bestanden",
+      "detail": "780 Zeichen"
+    },
+    {
+      "typ": "erwaehnt_nicht",
+      "status": "verletzt",
+      "detail": "unerwuenscht enthalten: ['Kuerbis']"
+    }
+  ],
+  "fall_status": "verletzt",
+  "dauer_s": 67.8
+}

@@ -1,0 +1,208 @@
+{
+  "id": "schwer_kombi_constraints",
+  "beschreibung": "SCHWERER FALL: 4 Gerichte, vegan UND glutenfrei UND max 400 kcal, 3 Personen, abwechslungsreich. Viele gleichzeitige Constraints - hier erwarten wir Verletzungen (z.B. kcal trotz Revision ueber Limit oder tierische Zutat aus schlecht gefilterter Recherche).",
+  "erwartet_schwer": true,
+  "warum_schwer": "Die Recherche liefert selten Rezepte, die vegan+glutenfrei+kalorienarm zugleich sind; der Workflow revidiert nur EINMAL pro Gericht. Wir erwarten, dass mindestens ein Constraint reisst.",
+  "eingabe": {
+    "nachricht": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen.",
+    "modus": "einkaufsliste"
+  },
+  "profil": {
+    "ernaehrung": [
+      "vegan",
+      "glutenfrei"
+    ],
+    "geschmack": [],
+    "wichtig": [],
+    "bewertungen": {}
+  },
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "1. **Black Bean, Tofu & Avocado Rice Bowl**: Schwarze Bohnen, Tofu, Reis, Avocado, Spinat (~617 kcal/Portion).  \n2. **Spinach & Sweet Potato Curry**: Süßkartoffeln, Spinat, Kokosmilch, Kurkuma (~400 kcal/Portion).  \n3. **Zucchini Noodles with Pesto**: Zucchini, Pinienkerne, Petersilie, Olivenöl, Zitrone (~400 kcal/Portion).  \n4. **Easy Vegetable Fajitas**: Zwiebel, Paprika, Aubergine, glutenfreie Tortillas (~400 kcal/Portion).  \n\n**Einkaufsliste**:  \n- Schwarze Bohnen  \n- Tofu  \n- Reis  \n- Avocado  \n- Spinat  \n- Süßkartoffeln  \n- Kokosmilch  \n- Kurkuma  \n- Zucchini  \n- Pinienkerne  \n- Petersilie  \n- Olivenöl  \n- Zitrone  \n- Zwiebel  \n- Paprika  \n- Aubergine  \n- Glutenfreie Tortillas",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen. glutenfrei vegan"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Black Bean, Tofu & Avocado Rice Bowl**  \n   - **Hauptzutaten**: Schwarze Bohnen, Tofu, Avocado, Reis, Koriander  \n   - **Zubereitung**: Tofu anbraten, Reis kochen, Bohnen erwärmen, Avocado würfeln. Alle Komponenten vermengen, mit Koriander bestreuen.  \n   - **Quelle**: [BBC Good Food](https://www.bbcgoodfood.com/recipes/collection/vegan-gluten-free-recipes)  \n\n2. **Kreide-Limetten-Kohlquiche (Chile-Lime Cauliflower Quesadillas)**  \n   - **Hauptzutaten**: Brokkoli, Tofu, Reisnudeln (glutenfrei), Limette, Kreuzkümmel  \n   - **Zubereitung**: Brokkoli dünsten, Tofu in Streifen schneiden. Mit Gewürzen in glutenfreie Tortillas füllen, andünsten.  \n   - **Quelle**: [EatingWell](https://www.eatingwell.com/gallery/7824736/vegetarian-dinners-with-400-calories)  \n\n3. **Glutenfreier Spinat-Süßkartoffel-Kurkuma-Curry**  \n   - **Hauptzutaten**: Süßkartoffeln, Spinat, Kurkuma, Kokosmilch, Reis (glutenfrei)  \n   - **Zubereitung**: Süßkartoffeln dünsten, Spinat kurz anbraten. Mit Kurkuma und Kokosmilch vermengen, über Reis servieren.  \n   - **Quelle**: [BBC Good Food](https://www.bbcgoodfood.com/recipes/collection/vegan-gluten-free-recipes)  \n\n4. **Veganer Shepherds Pie mit Gemüsegravy**  \n   \n[... gekuerzt ...]"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "args": {
+        "rezept_titel": "Black Bean, Tofu & Avocado Rice Bowl",
+        "portionen": 3
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "inhalt": "~617 kcal/Portion -> UEBER Limit 400, revidiere"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Revision: kalorienarmer Ersatz"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Chile-Lime Cauliflower Quesadillas**  \n   *Hauptzutaten*: Rote Bete, schwarze Bohnen, Avocado, Zitronengras  \n   *Zubereitung*: Rote Bete rösten, Füllung aus schwarzen Bohnen, Avocado und Zitronengras herstellen, in Tortillas füllen und backen.  \n   *Quelle*: [EatingWell](https://www.eatingwell.com/gallery/7824736/vegetarian-dinners-with-400-calories)  \n\n2. **Black Bean, Tofu & Avocado Rice Bowl**  \n   *Hauptzutaten*: Schwarze Bohnen, Tofu, Reis, Avocado, Spinat  \n   *Zubereitung*: Tofu anbraten, Reis kochen, alle Zutaten in Schüsseln anrichten.  \n   *Quelle*: [BBC Good Food](https://www.bbcgoodfood.com/recipes/collection/vegan-gluten-free-recipes)  \n\n3. **Mushroom Spinach Tofu Pie**  \n   *Hauptzutaten*: Tofu, Pilze, Spinat, glutenfreier Teig  \n   *Zubereitung*: Tofu-Füllung mit Pilzen und Spinat herstellen, in glutenfreien Teig einwickeln und backen.  \n   *Quelle*: [Sharon Palmer](https://sharonpalmer.com/25-vegan-comfort-food-meals-under-500-calories)  \n\n4. **Easy Vegetable Fajitas**  \n   *Hauptzutaten*: Zwiebeln, Paprika, Tofu, Reis  \n   *Zubereitung*: Gemüse anbraten, Tofu hinzufügen, mit Reis servieren.  \n   *Quelle*: [Sharon Palmer](https://sharonpalmer.com/25-vegan-comf\n[... gekuerzt ...]"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "args": {
+        "rezept_titel": "Black Bean, Tofu & Avocado Rice Bowl",
+        "portionen": 3
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "inhalt": "Ersatz ~617 kcal/Portion"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen. glutenfrei vegan (anderes Gericht als: Black Bean, Tofu & Avocado Rice Bowl)"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Curried Tomato-Lentil Stew**  \n   **Zutaten**: Dattelbohnen, Tomaten, Zwiebel, Currypulver, Kokosmilch  \n   **Zubereitung**:  \n   - Zwiebel anbraten, Tomaten und Curry hinzufügen.  \n   - Dattelbohnen kochen, mit Kokosmilch vermengen.  \n   - Mit Salz und Pfeffer abschmecken.  \n   **Quelle**: [Forks Over Knives](https://www.forksoverknives.com)  \n\n2. **Mushroom Spinach Tofu Pie**  \n   **Zutaten**: Tofu, Pilze, Spinat, glutenfreies Teigwaren  \n   **Zubereitung**:  \n   - Tofu pressen und mit Pilzen und Spinat vermengen.  \n   - Füllung in glutenfreie Teigblätter füllen und backen.  \n   **Quelle**: [Sharon Palmer](https://sharonpalmer.com)  \n\n3. **Easy Vegetable Fajitas**  \n   **Zutaten**: Paprika, Zucchini, Mais, Avocado, Corn-Tortillas  \n   **Zubereitung**:  \n   - Gemüse scharf anbraten, in Tortillas füllen.  \n   - Mit Avocado und Zitrone servieren.  \n   **Quelle**: [Sharon Palmer](https://sharonpalmer.com)  \n\n4. **Spinach & Sweet Potato Curry**  \n   **Zutaten**: Süßkartoffeln, Spinat, Kokosmilch, Kurkuma  \n   **Zubereitung**:  \n   - Süßkartoffeln dünsten, Spinat und Gewürze hinzufügen.  \n   - Mit Kokosmilch cremig machen.  \n   **Quelle**: [BBC Good Food](https://www.bbcgoodfood.c\n[... gekuerzt ...]"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "args": {
+        "rezept_titel": "Spinach & Sweet Potato Curry",
+        "portionen": 3
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "inhalt": "~400 kcal/Portion -> unter Limit 400"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen. glutenfrei vegan (anderes Gericht als: Black Bean, Tofu & Avocado Rice Bowl, Spinach & Sweet Potato Curry)"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Curried Tomato-Lentil Stew**  \n   - **Zutaten**: Tomaten, Linsen, Curry, Zwiebeln, Kokosmilch  \n   - **Zubereitung**: Linsen kochen, Gemüse anbraten, mit Flüssigkeit ablöschen, 30 Min. köcheln.  \n   - **Quelle**: [Forkoverknives](https://www.forksoverknives.com/recipes/vegan-menus-collections/22-of-our-favorite-gluten-free-vegan-recipes)  \n\n2. **Spicy Stir-Fry Tacos**  \n   - **Zutaten**: Reis, Bohnen, Paprika, Zwiebeln, Chilis, Mais-Tortillas  \n   - **Zubereitung**: Gemüse anbraten, mit Reis und Bohnen vermengen, in Tortillas füllen.  \n   - **Quelle**: [Forkoverknives](https://www.forksoverknives.com/recipes/vegan-menus-collections/22-of-our-favorite-gluten-free-vegan-recipes)  \n\n3. **Stuffed Bell Peppers**  \n   - **Zutaten**: Paprika, Reis, Erbsen, Tomaten, Petersilie  \n   - **Zubereitung**: Reis mit Gemüse dünsten, in gebohrte Paprika füllen, 25 Min. backen.  \n   - **Quelle**: [The Cheap Lazy Vegan](https://thecheaplazyvegan.com/low-calorie-filling-vegan-gluten-free-recipes-healthy-including-calories-macros)  \n\n4. **Zucchini Noodles with Pesto**  \n   - **Zutaten**: Zucchini, Pinienkerne, Petersilie, Olivenöl, Zitrone  \n   - **Zubereitung**: Zucchini spiralisieren, Pesto aus \n[... gekuerzt ...]"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "args": {
+        "rezept_titel": "Zucchini Noodles with Pesto",
+        "portionen": 3
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "inhalt": "~400 kcal/Portion -> unter Limit 400"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen. glutenfrei vegan (anderes Gericht als: Black Bean, Tofu & Avocado Rice Bowl, Spinach & Sweet Potato Curry, Zucchini Noodles with Pesto)"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Mushroom Spinach Tofu Pie**  \n   - **Hauptzutaten**: Tofu, Pilze, Spinat, glutenfreie Kruste  \n   - **Zubereitung**: Tofu mit Pilzen und Spinat vermengen, in eine glutenfreie Kruste füllen, backen.  \n   - **Quelle**: [Sharon Palmer](https://sharonpalmer.com/25-vegan-comfort-food-meals-under-500-calories)  \n\n2. **Easy Vegetable Fajitas**  \n   - **Hauptzutaten**: Gemüse (Zwiebel, Paprika, Aubergine), glutenfreie Tortillas  \n   - **Zubereitung**: Gemüse anbraten, in glutenfreie Tortillas füllen, mit Avocado servieren.  \n   - **Quelle**: [Sharon Palmer](https://sharonpalmer.com/25-vegan-comfort-food-meals-under-500-calories)  \n\n3. **Quinoa Stuffed Bell Peppers**  \n   - **Hauptzutaten**: Quinoa, rote Paprika, Erbsen, Tomatenmark  \n   - **Zubereitung**: Quinoa kochen, mit Erbsen und Tomatenmark vermengen, in Paprika füllen und dünsten.  \n   - **Quelle**: [EatingWell](https://www.eatingwell.com/gallery/7824736/vegetarian-dinners-with-400-calories)  \n\n4. **Chickpea & Spinach Stew**  \n   - **Hauptzutaten**: Kichererbsen, Spinat, Kokosmilch, Kurkuma  \n   - **Zubereitung**: Kichererbsen mit Gewürzen köcheln, Spinat und Kokosmilch unterrühren.  \n   - **Quelle**: [Magical Life of Fruit](ht\n[... gekuerzt ...]"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "args": {
+        "rezept_titel": "Easy Vegetable Fajitas",
+        "portionen": 3
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "naehrwerte_schaetzen",
+      "inhalt": "~400 kcal/Portion -> unter Limit 400"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "wochenplan_zusammenstellen",
+      "args": {
+        "anzahl_gerichte": 4
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "wochenplan_zusammenstellen",
+      "inhalt": "Wochenplan:\n1. Black Bean, Tofu & Avocado Rice Bowl\n2. Spinach & Sweet Potato Curry\n3. Zucchini Noodles with Pesto\n4. Easy Vegetable Fajitas\n\nGesamt-Einkaufsliste (fehlende Zutaten fuer alle Gerichte):\n- Schwarze Bohnen\n- Tofu\n- Reis\n- Avocado\n- Spinat\n- Süßkartoffeln\n- Kokosmilch\n- Kurkuma\n- Zucchini\n- Pinienkerne\n- Petersilie\n- Olivenöl\n- Zitrone\n- Zwiebel\n- Paprika\n- Aubergine\n- glutenfreie Tortillas"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "recherche_rezepte: 5x aufgerufen"
+    },
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "naehrwerte_schaetzen: 5x aufgerufen"
+    },
+    {
+      "typ": "kcal_limit",
+      "status": "verletzt",
+      "detail": "1 Angabe(n) ueber Limit 400: [617.0]"
+    },
+    {
+      "typ": "verbotene_zutaten",
+      "status": "bestanden",
+      "detail": "21 Listenzeilen geprueft, keine verbotene Zutat"
+    }
+  ],
+  "fall_status": "verletzt",
+  "dauer_s": 246.1
+}

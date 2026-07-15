@@ -1,0 +1,75 @@
+{
+  "id": "glutenfrei_profil",
+  "beschreibung": "Harter Constraint aus dem Profil: glutenfrei - bei einer Nudel-Anfrage. Der Agent muss das Thema adressieren und darf keine Gluten-Quellen listen.",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Ich moechte heute etwas mit Nudeln kochen.",
+    "modus": "einkaufsliste"
+  },
+  "profil": {
+    "ernaehrung": [
+      "glutenfrei"
+    ],
+    "geschmack": [],
+    "wichtig": [],
+    "bewertungen": {}
+  },
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "**Glutenfreie Spaghetti mit Hackfleischsauce**  \n**Zutaten (für 2 Portionen):**  \n- 200g glutenfreie Nudeln  \n- 300g Hackfleisch (z. B. Rind)  \n- 1 Zwiebel  \n- 2 Knoblauchzehen  \n- 2 EL Tomatenmark  \n- 200ml Wasser oder Brühe  \n- Salz, Pfeffer, italienische Kräuter  \n\n**Zubereitung:**  \n1. Nudeln nach Packungsanweisung kochen, abspülen.  \n2. Zwiebel und Knoblauch fein hacken, Hackfleisch in einer Pfanne anbraten.  \n3. Tomatenmark unterrühren, mit Wasser/Brühe ablöschen und 5 Minuten köcheln lassen. Mit Salz, Pfeffer und Kräutern abschmecken.  \n4. Nudeln zur Sauce geben und kurz erwärmen.  \n\n**Einkaufsliste (fehlende Zutaten):**  \n- Glutenfreie Nudeln  \n- Hackfleisch  \n- Tomatenmark  \n- Zwiebeln  \n- Knoblauch  \n\n*Hinweis: Salz und Pfeffer sind als Grundzutaten nicht explizit in der Einkaufsliste aufgeführt.*",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "glutenfreie Nudelrezepte"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Glutenfreie Spaghetti mit Hackfleischsauce**  \n   - Hauptzutaten: Glutenfreie Nudeln, Hackfleisch, Tomatenmark, Zwiebeln, Knoblauch  \n   - Zubereitung: Nudeln kochen, Hackfleisch anbraten, mit Tomatenmark und Gewürzen ablöschen, mit Nudeln mischen.  \n   - Quelle: [glutenfrei-kochen.de](https://www.glutenfrei-kochen.de/rezept-glutenfreie-spaghetti)  \n\n2. **Glutenfreier Nudelsalat mit Avocado-Dressing**  \n   - Hauptzutaten: Glutenfreie Nudeln, Avocado, Cherrytomaten, Radieschen, Zitronensaft  \n   - Zubereitung: Nudeln kochen, mit gehackter Avocado, Zitronensaft und Kräutern vermengen, mit Salz und Pfeffer abschmecken.  \n   - Quelle: [lecker.de](https://www.lecker.de/rezept-glutenfreier-nudelsalat)  \n\n3. **Glutenfreie Lasagne mit Hähnchen**  \n   - Hauptzutaten: Glutenfreie Lasagneblätter, Hähnchenfleisch, Tomatensauce, Ricotta, Mozzarella  \n   - Zubereitung: Hähnchen anbraten, Lasagneblätter mit Ricotta und Tomatensauce schichten, bei 180°C backen.  \n   - Quelle: [kochrezepte.de](https://www.kochrezepte.de/rezept/glutenfreie-lasagne)"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "args": {
+        "benoetigte_zutaten": [
+          "Glutenfreie Nudeln",
+          "Hackfleisch",
+          "Tomatenmark",
+          "Zwiebeln",
+          "Knoblauch",
+          "Salz",
+          "Pfeffer"
+        ],
+        "vorhandene_zutaten": []
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "einkaufsliste_erstellen",
+      "inhalt": "Einkaufsliste (fehlende Zutaten):\n- Glutenfreie Nudeln\n- Hackfleisch\n- Tomatenmark\n- Zwiebeln\n- Knoblauch\n- Salz\n- Pfeffer"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "erwaehnt_eines",
+      "status": "bestanden",
+      "detail": "gefunden: ['glutenfrei']"
+    },
+    {
+      "typ": "verbotene_zutaten",
+      "status": "bestanden",
+      "detail": "16 Listenzeilen geprueft, keine verbotene Zutat"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 91.1
+}

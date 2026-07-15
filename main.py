@@ -8,7 +8,7 @@ Starten:
     python main.py
 
 Voraussetzungen:
-    - .env mit OPENAI_API_KEY und TAVILY_API_KEY
+    - .env mit GROQ_API_KEY und TAVILY_API_KEY
     - pip install -r requirements.txt
 """
 
@@ -56,11 +56,17 @@ def run_agent(user_input: str) -> None:
     print(f"ANFRAGE: {user_input}")
     print("=" * 60)
 
-    agent = create_orchestrator()
     inputs = {"messages": [HumanMessage(content=user_input)]}
 
-    for chunk in agent.stream(inputs, stream_mode="updates"):
-        print_tao_trace(chunk)
+    # Technische Fehler (API-Limit, Netzwerk, fehlende Keys) graceful abfangen (W9):
+    # eine klare Meldung statt eines Stacktrace, damit die CLI nutzbar bleibt.
+    try:
+        agent = create_orchestrator()
+        for chunk in agent.stream(inputs, stream_mode="updates"):
+            print_tao_trace(chunk)
+    except Exception as exc:
+        print(f"\n[FEHLER] Anfrage konnte nicht verarbeitet werden ({type(exc).__name__}).")
+        print("Moegliche Ursachen: API-Limit erreicht, Netzwerkproblem oder fehlende API-Keys.")
 
     print("\n" + "=" * 60 + "\n")
 

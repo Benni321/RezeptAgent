@@ -1,0 +1,55 @@
+{
+  "id": "einfach_tomate_mozzarella",
+  "beschreibung": "Einfache Rezeptfrage - gerader Weg: genau EINE Recherche, dann Antwort (System-Prompt: 'hoechstens einmal recherchieren').",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Was kann ich mit Tomaten und Mozzarella kochen?",
+    "modus": "einkaufsliste"
+  },
+  "profil": null,
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "Ich schlage das **Tomaten-Mozzarella-Salat**-Rezept vor – ein klassisches, frisches Gericht:\n\n**Zutaten** (für 2 Portionen):  \n- 400g Cherrytomaten  \n- 200g Mozzarella (in Scheiben)  \n- 50g Basilikumblätter  \n- 2 EL Olivenöl  \n- 1 EL Balsamico-Essig  \n- Salz, Pfeffer  \n\n**Zubereitung**:  \n1. Tomaten und Mozzarella in dünne Scheiben schneiden.  \n2. Auf einem Teller abwechselnd anrichten.  \n3. Mit Basilikum bestreuen, Olivenöl und Balsamico-Essig darauf verteilen.  \n4. Mit Salz und Pfeffer abschmecken.  \n\n**Einkaufsliste** (falls Zutaten fehlen):  \n- Cherrytomaten (400g)  \n- Mozzarella (200g)  \n- Basilikum (50g)  \n- Balsamico-Essig (1 EL)  \n\nDas Rezept ist glutenfrei und vegetarisch (sofern der Mozzarella keine tierischen Enzyme enthält). Für eine Kalorienangabe könnte ich die Nährwerte schätzen, wenn gewünscht.",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Rezepte mit Tomaten und Mozzarella"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Tomaten-Mozzarella-Salat**  \n   - **Hauptzutaten**: Tomaten, Mozzarella, Basilikum, Olivenöl, Balsamico-Essig  \n   - **Zubereitung**: Tomaten und Mozzarella in Scheiben schneiden, abwechselnd auf einem Teller anrichten. Mit Basilikumblättern, Olivenöl und Balsamico-Essig beträufeln.  \n   - **Quelle**: [kochrezepte.de](https://www.kochrezepte.de/rezept/tomaten-mozzarella-salat)  \n\n2. **Tomaten-Mozzarella-Tarte**  \n   - **Hauptzutaten**: Tomaten, Mozzarella, Puffteig, Thymian, Olivenöl  \n   - **Zubereitung**: Puffteig in eine Form legen. Tomaten in Streifen schneiden und auf dem Teig verteilen. Mozzarella darauf platzieren, mit Thymian bestreuen und im Ofen bei 200°C ca. 20 Minuten backen.  \n   - **Quelle**: [backfisch.de](https://www.backfisch.de/tomaten-mozzarella-tarte)  \n\n3. **Tomaten-Mozzarella-Pizza**  \n   - **Hauptzutaten**: Pizza-Teig, Tomatenmark, Mozzarella, Olivenöl, Basilikum  \n   - **Zubereitung**: Teig ausrollen, mit Tomatenmark bestreichen, Mozzarella darauf verteilen. Mit Olivenöl beträufeln und Basilikum bestreuen. Bei 220°C ca. 10–12 Minuten backen.  \n   - **Quelle**: [pizza-italia.de](https://www.pizza-italia.de/rezept/tomaten-mozzarella-pizza)"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "antwort_nicht_leer",
+      "status": "bestanden",
+      "detail": "821 Zeichen"
+    },
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "recherche_rezepte: 1x aufgerufen"
+    },
+    {
+      "typ": "tool_nicht_aufgerufen",
+      "status": "bestanden",
+      "detail": "naehrwerte_schaetzen: nicht aufgerufen"
+    },
+    {
+      "typ": "schrittzahl",
+      "status": "bestanden",
+      "detail": "1 Aktionen (Korridor 1-8)"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 19.3
+}

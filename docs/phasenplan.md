@@ -2,6 +2,12 @@
 
 *Stand: 2026-06-02 · Applied AI SS26 · HTWG Konstanz*
 
+> **Update 2026-07-15:** Der Plan ist im Kern umgesetzt; eine Abweichung:
+> Phase 2b (RAG mit Chroma + Embeddings, Teampartner) wurde **bewusst ersetzt**
+> durch das **Kochbuch-RAG** (BM25 über selbst gelernte Rezeptbasis,
+> `app/tools/kochbuch.py`) — Begründung in der README („Kochbuch-RAG“).
+> Aktueller Anforderungsstatus: [bewertungsmatrix.md](bewertungsmatrix.md).
+
 ## Leitprinzip
 
 > **Sinnhaftigkeit vor Checkbox.** Wir erfüllen eine Anforderung nur, wenn sie für
@@ -69,14 +75,14 @@ Agenten dadurch saubere, eindeutige Eingaben liefert.
   (zahlt auf [W9] ein).
 
 **Stack (alles kostenlos / reproduzierbar):** Streamlit (GUI) · FastAPI (Backend) ·
-LangGraph (Agenten) · Groq (Text `llama-3.3-70b`, Vision = multimodales Llama-4-Modell) ·
+LangGraph (Agenten) · Groq (Text `qwen/qwen3-32b`, Vision = multimodales Llama-4-Modell) ·
 Tavily (Web) · Chroma (Vektor-DB).
 
 ---
 
 ## Aktueller Stand (Phase 1 — erledigt)
 
-- LangGraph-ReAct-Agent (`create_react_agent`), Modell Groq `llama-3.3-70b`.
+- LangGraph-ReAct-Agent (`create_react_agent`), Modell Groq `qwen/qwen3-32b`.
 - Ein echtes Tool: `web_search` (Tavily) → **P1** erfüllt.
 - TAO-Zyklus wird im Terminal sichtbar ausgegeben (`main.py`).
 - README mit Framework-Begründung → **P3/P4** weitgehend erfüllt.

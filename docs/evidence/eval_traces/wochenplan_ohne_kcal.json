@@ -1,0 +1,78 @@
+{
+  "id": "wochenplan_ohne_kcal",
+  "beschreibung": "Planungsfall ohne kcal-Vorgabe: situationsabhaengiger Pfad - der Naehrwert-Check darf NICHT laufen (kein Constraint -> kein Check), Abwechslung ueber zwei Recherchen.",
+  "erwartet_schwer": false,
+  "warum_schwer": null,
+  "eingabe": {
+    "nachricht": "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur mit Gemuese.",
+    "modus": "einkaufsliste"
+  },
+  "profil": null,
+  "modell": "qwen/qwen3-32b",
+  "datum": "2026-07-14",
+  "fehler": null,
+  "antwort": "1. Gebratener Lachs mit Dill-Sauce (ca. 500 kcal)  \n   - Lachsfilet, Dill, Butter, Kartoffeln, Zitrone  \n\nGesamt-Einkaufsliste:  \n- Lachsfilet  \n- Dill  \n- Butter  \n- Kartoffeln  \n- Zitrone",
+  "trace": [
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur mit Gemuese."
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": "1. **Gebratener Lachs mit Dill-Sauce**  \n   - **Hauptzutaten**: Lachsfilet, Dill, Butter, Kartoffeln, Zitrone  \n   - **Zubereitung**:  \n     - Kartoffeln dünsten.  \n     - Lachs in der Pfanne mit Butter anbraten.  \n     - Dill-Sauce aus Sahne, Zitronensaft und gehacktem Dill herstellen.  \n     - Alles servieren.  \n   - **Quelle**: [Lachs-Rezept](https://www.gutefrage.net/frage/gebratener-lachs-mit-dill-sauce)  \n\n2. **Kürbis-Spinat-Curry (vegetarisch)**  \n   - **Hauptzutaten**: Hokkaido-Kürbis, Spinat, Zwiebeln, Currypulver, Kokosmilch  \n   - **Zubereitung**:  \n     - Zwiebeln anbraten, Currypulver hinzufügen.  \n     - Kürbiswürfel und Spinat dazugeben, mit Kokosmilch ablöschen.  \n     - 20 Minuten köcheln lassen.  \n   - **Quelle**: [Kürbis-Curry-Rezept](https://www.vegetarisch-kochen.de/koerbiskochrezept)"
+    },
+    {
+      "art": "aktion",
+      "ziel": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "args": {
+        "anfrage": "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur mit Gemuese. (anderes Gericht als: Gebratener Lachs mit Dill-Sauce)"
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Sub-Agent",
+      "name": "recherche_rezepte",
+      "inhalt": ""
+    },
+    {
+      "art": "aktion",
+      "ziel": "Tool",
+      "name": "wochenplan_zusammenstellen",
+      "args": {
+        "anzahl_gerichte": 1
+      }
+    },
+    {
+      "art": "beobachtung",
+      "quelle": "Tool",
+      "name": "wochenplan_zusammenstellen",
+      "inhalt": "Wochenplan:\n1. Gebratener Lachs mit Dill-Sauce\n\nGesamt-Einkaufsliste (fehlende Zutaten fuer alle Gerichte):\n- Lachsfilet\n- Dill\n- Butter\n- Kartoffeln\n- Zitrone"
+    }
+  ],
+  "checks": [
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "recherche_rezepte: 2x aufgerufen"
+    },
+    {
+      "typ": "tool_nicht_aufgerufen",
+      "status": "bestanden",
+      "detail": "naehrwerte_schaetzen: nicht aufgerufen"
+    },
+    {
+      "typ": "tool_aufgerufen",
+      "status": "bestanden",
+      "detail": "wochenplan_zusammenstellen: 1x aufgerufen"
+    }
+  ],
+  "fall_status": "bestanden",
+  "dauer_s": 60.8
+}

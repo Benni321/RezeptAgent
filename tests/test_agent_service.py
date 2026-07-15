@@ -17,3 +17,12 @@ def test_modus_vorhanden_verbietet_fehlende():
 def test_filter_werden_angehaengt():
     text = _baue_eingabe("Pasta", "einkaufsliste", ["vegetarisch", "schnell"])
     assert "vegetarisch" in text and "schnell" in text
+
+
+def test_harte_vorgaben_werden_als_muss_markiert():
+    # Ernaehrungsform muss dem Agenten als MUSS-Vorgabe uebergeben werden -- die
+    # deterministisch pruefbare Basis dafuer, dass sie nie verletzt wird (auch im
+    # Wochenplan: das Durchsetzen selbst ist LLM-Verhalten, siehe Evidence-Trace).
+    text = _baue_eingabe("Plane mir 3 Abendessen", "einkaufsliste", ["vegan"])
+    assert "vegan" in text
+    assert "MUESSEN erfuellt sein" in text or "MUSS" in text.upper()
