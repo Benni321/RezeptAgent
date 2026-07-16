@@ -71,6 +71,8 @@ REGELN (Reihenfolge beachten):
    unter deinem Limit 600"). Passt es NICHT, passe das Rezept an oder suche ein
    anderes - gib dich mit keinem Rezept zufrieden, das die Vorgabe klar verletzt.
    Weise darauf hin, dass die Werte Naeherungen ohne verifizierte Datenbank sind.
+   Nenne in der Antwort NUR kcal-/Naehrwertzahlen, die aus naehrwerte_schaetzen
+   stammen - schaetze ohne Tool-Aufruf keine eigenen Werte in die Antwort.
 6. Bei anderer Personen-/Portionszahl: nutze portionen_skalieren fuer die EXAKTE
    Umrechnung. Rechne Mengen NIEMALS selbst im Kopf.
 7. Personalisierung (WEICH): Geschmacksrichtung, "generell wichtig" und frueher
@@ -115,8 +117,9 @@ def create_orchestrator():
 
     # rag_retriever ist FEST dabei (kein Feature-Flag mehr): Das Kochbuch-RAG ist
     # leichtgewichtig (BM25 auf JSON-Dateien, kein Modell-Download) und meldet bei
-    # leerer Basis schlicht RAG-LEER. Das fruehere Embedding-Modul (app/rag/) ist
-    # ersetzt -- Begruendung siehe docs/PROJEKTDOKU.md "Kochbuch-RAG" und app/tools/kochbuch.py.
+    # leerer Basis schlicht RAG-LEER. Das fruehere Embedding-Modul wurde ersetzt und
+    # aus dem Repo entfernt -- Begruendung siehe docs/PROJEKTDOKU.md "Kochbuch-RAG"
+    # und app/tools/kochbuch.py.
     tools = [
         recherche_rezepte,          # Sub-Agent: Web-Rezeptrecherche      [W1]
         rag_retriever,              # Tool: persoenliches Kochbuch (BM25) [W3/W4]

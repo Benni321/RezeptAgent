@@ -20,9 +20,6 @@ env/
 .vscode/
 .idea/
 
-# Chroma DB (lokal)
-app/rag/chroma_db/
-
 # Laufzeit-Daten: persoenliche Praeferenzen (Geschmack + Bewertungen)
 data/praeferenzen.json
 # Laufzeit-Daten: aus Bewertungen GELERNTE Kochbuch-Rezepte (Seeds bleiben versioniert)
@@ -36,14 +33,14 @@ logs/
 .claude/
 .DS_Store
 
-# Hinweis: app/rag/, app/api/, tests/ und docs/ werden BEWUSST versioniert
-# (sie sind Teil der Abgabe). Nur die generierte Vektor-DB bleibt ignoriert
-# (siehe app/rag/chroma_db/ oben).
+# Hinweis: app/, tests/ und docs/ werden BEWUSST versioniert
+# (sie sind Teil der Abgabe).
 
 # Vorlesungsunterlagen und Aufgabenstellung (Material des Profs, nicht weiterverbreiten)
 docs/Bisherige Vorlesungsinhalte/
 semesterprojekt.md
 semesterprojekt_anleitung*.pdf
+semesterprojekt_bewertung*.pdf
 
 # Sonstiges
 https:/

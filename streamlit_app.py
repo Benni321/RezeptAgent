@@ -158,6 +158,12 @@ with st.form("anfrage"):
         type=["jpg", "jpeg", "png", "webp"],
         help="Lade ein Foto hoch – der Agent erkennt die Zutaten automatisch.",
     )
+    # Transparenz (Responsible AI, W14): der Nutzer soll VOR dem Upload wissen,
+    # dass das Bild das Geraet verlaesst — nicht erst in der Doku nachlesen.
+    st.caption(
+        "ℹ️ Das Foto wird zur Zutatenerkennung an ein externes Vision-Modell "
+        "(Groq) gesendet und nicht dauerhaft gespeichert."
+    )
 
     absenden = st.form_submit_button("Rezept finden", type="primary")
 

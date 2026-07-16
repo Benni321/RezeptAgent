@@ -25,9 +25,3 @@ services:
       - .env
     depends_on:
       - api
-
-  # Phase 2b (Kollege): Bei Bedarf eine persistente Chroma-Instanz fuer RAG ergaenzen.
-  # chroma:
-  #   image: chromadb/chroma:latest
-  #   ports: ["8001:8000"]
-  #   volumes: ["./app/rag/chroma_db:/chroma/chroma"]

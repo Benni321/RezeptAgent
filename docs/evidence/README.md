@@ -3,14 +3,14 @@
 *Alle Nachweise stammen aus **realen Läufen** gegen den echten Agenten (Groq +
 Tavily) und sind über die genannten Skripte reproduzierbar. Nichts hier ist
 handgeschrieben „behauptet“ — die Traces sind Rohdaten der Observability-Schicht
-(`trace_id`, Spans mit `dauer_ms`/`status`, siehe README „Observability“).*
+(`trace_id`, Spans mit `dauer_ms`/`status`, siehe [PROJEKTDOKU § 2.9](../PROJEKTDOKU.md#29-observability-traces--spans-statt-loser-log-zeilen-w5-vl09)).*
 
 ## Pflichtanforderungen
 
 | Anforderung | Nachweis | Kontext (1 Satz) |
 |-------------|----------|------------------|
 | **P1** Echter Agent mit Tool-Use | [referenz_traces.md](referenz_traces.md), Roh-Traces in [traces/](traces/) | Reale Läufe, in denen der Orchestrator situationsabhängig Sub-Agent und Tools aufruft (`recherche_rezepte`, `naehrwerte_schaetzen`, `einkaufsliste_erstellen` …). |
-| **P2** TAO sichtbar, ≥ 3 Zyklen | [referenz_traces.md](referenz_traces.md), Eingabe (b) | Der Wochenplan-Trace enthält die geforderten ≥ 3 vollständigen Thought→Action→Observation-Zyklen, im Begleittext einzeln beschriftet; ergänzend [wochenplan_trace.md](wochenplan_trace.md). |
+| **P2** TAO sichtbar, ≥ 3 Zyklen | [referenz_traces.md](referenz_traces.md), Eingabe (b) + [eval_traces/kcal_limit_einzelrezept.json](eval_traces/kcal_limit_einzelrezept.json) | Der Wochenplan-Trace (b) enthält 9 beschriftete Thought→Action→Observation-Zyklen — transparent: dieser Pfad ist code-orchestriert ([PROJEKTDOKU § 2.4](../PROJEKTDOKU.md#24-wochenplan-workflow--bewusste-korrektur-nach-gescheitertem-ansatz)). **Voll agentisch** zeigt `kcal_limit_einzelrezept` ≥ 3 Zyklen (Recherche → Nährwert-Check → Skalierung, Tool-Wahl durch den Orchestrator); ergänzend [wochenplan_trace.md](wochenplan_trace.md). |
 | **P3** Framework + Begründung | README-Abschnitt „Framework“, `app/agents/orchestrator.py` | LangGraph (`create_react_agent`) mit dokumentierter Begründung — kein Evidence-Lauf nötig, im Code prüfbar. |
 | **P4** README vollständig | [../../README.md](../../README.md) | Beschreibung, Architektur, Installation, Beispiel + Designentscheidungen mit Warum. |
 | **P5** Git-Historie ≥ 10 Commits | Git-Log des Repos | Per `git log --oneline` prüfbar (nicht Teil dieses Ordners). |

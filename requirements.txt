@@ -22,10 +22,11 @@ pillow>=10.4.0
 # Validation
 pydantic>=2.9.0
 
-# RAG (Phase 2b)
-chromadb>=0.5.0
-sentence-transformers>=3.0.0
-langchain-chroma>=0.1.0
+# RAG: bewusst KEINE Zusatz-Dependencies. Das Kochbuch-RAG (W3/W4) nutzt selbst
+# implementiertes BM25 (app/tools/kochbuch.py); der fruehere Chroma+Embedding-Stack
+# zog ueber sentence-transformers ein GB-grosses torch mit — Abhaengigkeiten und
+# Modul am 2026-07-16 entfernt (Begruendung: docs/PROJEKTDOKU.md "Kochbuch-RAG",
+# Historie: docs/handover.md).
 
 # Utilities
 python-dotenv>=1.0.0

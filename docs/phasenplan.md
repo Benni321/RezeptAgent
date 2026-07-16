@@ -5,7 +5,7 @@
 > **Update 2026-07-15:** Der Plan ist im Kern umgesetzt; eine Abweichung:
 > Phase 2b (RAG mit Chroma + Embeddings, Teampartner) wurde **bewusst ersetzt**
 > durch das **Kochbuch-RAG** (BM25 über selbst gelernte Rezeptbasis,
-> `app/tools/kochbuch.py`) — Begründung in der README („Kochbuch-RAG“).
+> `app/tools/kochbuch.py`) — Begründung in [PROJEKTDOKU.md](PROJEKTDOKU.md) („Kochbuch-RAG").
 > Aktueller Anforderungsstatus: [bewertungsmatrix.md](bewertungsmatrix.md).
 
 ## Leitprinzip

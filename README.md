@@ -174,10 +174,9 @@ RezeptAgent/
 │   │   ├── praeferenzen.py        # Memory: Geschmacksprofil + Bewertungen
 │   │   ├── text_utils.py          # Reasoning-Filter (<think>) für Modell-Ausgaben
 │   │   └── logging_config.py      # strukturiertes JSON-Logging          [W5]
-│   ├── api/
-│   │   ├── main.py              # FastAPI: /chat, /health, /praeferenzen, /bewertung [W6/W11]
-│   │   └── schemas.py           # Pydantic-Validierung                  [W9]
-│   └── rag/                     # ERSETZT durch app/tools/kochbuch.py (PROJEKTDOKU § 2.6)
+│   └── api/
+│       ├── main.py              # FastAPI: /chat, /health, /praeferenzen, /bewertung [W6/W11]
+│       └── schemas.py           # Pydantic-Validierung                  [W9]
 ├── data/rezepte/                # Kochbuch-Wissensbasis: seed_* (mitgeliefert) + gelernt_*
 ├── streamlit_app.py             # grafische Oberfläche (GUI)
 ├── scripts/                     # Evidence-Generatoren (Referenz-/Vision-/Wochenplan-Traces)

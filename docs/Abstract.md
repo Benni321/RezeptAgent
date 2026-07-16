@@ -1,4 +1,16 @@
-Abstract
+# Abstract
+
+> **Hinweis (Update 2026-07-16):** Dies ist das ursprüngliche Pitch-Abstract vom
+> Projektstart — es bleibt unverändert als zeitgeschichtliches Dokument stehen.
+> Abweichungen der Umsetzung: Statt „Subagenten für Bildanalyse, Filter-Agent
+> und Co." gibt es bewusst genau **einen** Sub-Agenten (Web-Recherche,
+> Kontext-Isolation) — Bildanalyse ist ein vorgelagerter Vision-Schritt,
+> „Filter" sind harte Profil-Vorgaben, kein Agent (Begründung:
+> [PROJEKTDOKU § 2](PROJEKTDOKU.md#2-architektur)). Statt einer Chefkoch-API
+> wird Tavily-Websuche genutzt. Dazugekommen sind Kochbuch-RAG,
+> Nährwert-/Skalierungs-Tools, Wochenplan-Workflow und Memory.
+> Aktueller Stand: [README](../README.md) + [PROJEKTDOKU](PROJEKTDOKU.md).
+
 In unserem Projekt entwickeln wir einen Rezept-Agenten. Dieser soll Nutzern dabei helfen, passende Rezepte zu finden. Das System soll nicht nur einfache Vorschläge machen, sondern mehrere spezialisierte Agenten nutzen, die zusammenarbeiten.
 Das System verarbeitet multimodale Eingaben: Nutzer können Essenswünsche und Zutaten als Text eingeben oder ein Foto ihres Kühlschranks hochladen. Auf Basis dieser Informationen recherchiert das System selbstständig im Internet nach passenden Rezepten oder generiert bei ausbleibenden Treffern eigene Vorschläge direkt über das Sprachmodell. 
 Ein weiterer geplanter Bestandteil ist eine Funktion, mit der Nutzer auswählen können, ob nur mit den Zutaten gekocht werden soll, die bereits zuhause vorhanden sind, oder ob auch fehlende Zutaten vorgeschlagen und in eine Einkaufsliste übernommen werden dürfen.

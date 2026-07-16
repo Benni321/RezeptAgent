@@ -13,6 +13,7 @@ Inhalt:
 3. [Funktionsweise: der TAO-Zyklus an einem echten Lauf](#3-funktionsweise-der-tao-zyklus-an-einem-echten-lauf)
 4. [Konzept→Kurs-Mapping](#4-konzeptkurs-mapping)
 5. [Grenzen des Systems](#5-grenzen-des-systems)
+6. [Was wir anders machen würden](#6-was-wir-anders-machen-würden)
 
 ---
 
@@ -236,8 +237,8 @@ situationsabhängige Tool-Wahl, gemessen im Eval-Fall `favoriten_rag`).
 - **Warum BM25 statt Embedding-Modell + Vektor-DB?** (1) Der Korpus ist klein und
   wächst pro gekochtem Gericht um eins — Embedding-Nutzen minimal, Kosten real:
   Der erste RAG-Anlauf scheiterte an einem 2,27-GB-Modell-Download im laufenden
-  Request (GUI-Timeout) plus Implementierungsfehlern; das Modul (`app/rag/`) ist
-  ersetzt. (2) VL-Erkenntnis: lexikalische Suche + **agentische
+  Request (GUI-Timeout) plus Implementierungsfehlern; das Modul wurde ersetzt und
+  aus dem Repo entfernt (Historie: [handover.md](handover.md)). (2) VL-Erkenntnis: lexikalische Suche + **agentische
   Query-Umformulierung** schlägt naive One-Shot-Vektorsuche — die „Semantik"
   liefert das LLM, das bei `RAG-LEER` Synonyme probiert. (3) Deterministisch,
   offline testbar, kein Download: Der Kursrahmen (kostenlos, reproduzierbar)
@@ -358,8 +359,8 @@ Einzelergebnissen: [eval_report.md](evidence/eval_report.md), Roh-Traces daneben
 Der Agent arbeitet im **TAO-Zyklus** (Thought → Action → Observation): Das Modell
 überlegt, welches Werkzeug es braucht (Thought), ruft es auf (Action), und das
 Ergebnis fließt als Observation in den nächsten Gedanken ein — bis final
-geantwortet wird. Im Terminal (`main.py`) und in der GUI ist jeder Zyklus live
-sichtbar; persistiert wird er als Trace-JSON.
+geantwortet wird. In der CLI (`main.py`) und der GUI wird jeder Zyklus
+beschriftet ausgegeben; persistiert wird er als Trace-JSON.
 
 Durcherzählt am **echten Referenz-Lauf (b)** vom 2026-07-15
 ([referenz_traces.md](evidence/referenz_traces.md), Roh-JSON:
@@ -451,8 +452,8 @@ Ehrlich und konkret — je mit dem Schritt, der production-tauglich anders wäre
 5. **RAG-Status: bewusst lexikalisch.** BM25 findet „was Cremiges" nicht bei
    „Kokosmilch" — das muss die agentische Umformulierung leisten; die
    Zutaten-Extraktion beim Speichern ist eine Listenzeilen-Heuristik (lieber kein
-   Eintrag als ein falscher). Das alte Embedding-Modul (`app/rag/`) ist ersetzt
-   und inaktiv. *Production (bei wachsendem Korpus):* kleines, vorab geladenes
+   Eintrag als ein falscher). Das alte Embedding-Modul wurde ersetzt und aus dem
+   Repo entfernt. *Production (bei wachsendem Korpus):* kleines, vorab geladenes
    Embedding-Modell (z. B. `multilingual-e5-small`) als Hybrid mit BM25.
 6. **Single-User-Memory.** Ein Profil in einer JSON-Datei, keine Mandanten,
    Cold-Start bei neuem Nutzer, Overfitting auf wenige Bewertungen; der
@@ -464,3 +465,56 @@ Ehrlich und konkret — je mit dem Schritt, der production-tauglich anders wäre
    `requirements.txt` pinnt nur Mindestversionen — Tests laufen mit den aktuellen
    1.x-Ständen grün, aber unkontrollierte Updates bleiben ein Risiko.
    *Production:* Lockfile + bezahltes API-Kontingent.
+8. **Prompt-Regeln sind Leitplanken, keine Garantien.** Der Orchestrator-Prompt
+   formuliert harte Regeln („NIEMALS selbst im Kopf rechnen", Regel 2b:
+   `rag_retriever` nur bei Bezug auf Bewährtes) — ihre Befolgung bleibt aber
+   Modellverhalten. Belegt: Im Eval verletzt `schwer_skalierung_kette` Regel 6
+   (Skalierung „im Kopf" statt per Tool, [eval_report.md](evidence/eval_report.md));
+   in einem manuellen CLI-Lauf (2026-07-16, nicht als Trace persistiert) lief
+   `rag_retriever` entgegen Regel 2b bei einer normalen Anfrage und die Antwort
+   vermischte Kochbuch- und Web-Treffer (Titel des einen, Zutaten des anderen).
+   Wo eine Regel garantiert gelten muss, gehört sie deshalb in Code — genau die
+   Lektion aus § 2.4 und [§ 6 Punkt 3](#6-was-wir-anders-machen-würden).
+   *Production:* programmatische Antwort-/Trajektorien-Validierung nach jedem
+   Lauf mit Korrekturschleife.
+
+## 6. Was wir anders machen würden
+
+Rückblickend, mit dem Wissen aus Eval und realen Läufen — ehrlich statt
+beschönigt:
+
+1. **Stabile Rezept-IDs von Anfang an, statt Titel als Schlüssel.** Bewertungen,
+   Kochbuch-Einträge und das Meiden schlecht bewerteter Gerichte hängen alle am
+   heuristisch aus der Antwort extrahierten **Titel** (`rezept_aus_antwort` in
+   [kochbuch.py](../app/tools/kochbuch.py)). Formuliert das Modell um, zerfällt
+   das Lernsignal. Eine durchgängige Rezept-ID (vom Vorschlag bis zur Bewertung
+   mitgeführt) wäre früh billig gewesen — nachträglich zieht sie sich durch
+   API, GUI und Memory.
+2. **Verifier und Eval früher bauen — vor den Datenmodellen, nicht danach.**
+   Der Fall `schwer_kcal_tagessumme` deckte auf, dass `erkenne_wochenplan` nur
+   „kcal **pro Portion**" ausdrücken kann und ein Tages-Summen-Budget stillschweigend
+   fehlinterpretiert ([eval_report.md](evidence/eval_report.md)). Hätte das
+   Testset vor dem Workflow-Parameter-Schema existiert, hätte das Schema
+   Summen-Constraints von Anfang an vorgesehen — so war es ein nachträglich
+   entdeckter Designfehler.
+3. **Constraint-Durchsetzung konsequenter in den Code statt in den Prompt —
+   auch im Einzelrezept-Pfad.** Die Lektion des Wochenplaners („Workflow für die
+   Struktur", § 2.4) haben wir nur dort angewendet. Der Fall
+   `schwer_skalierung_kette` zeigt die Folge: Trotz expliziter Prompt-Regel 6
+   („Rechne Mengen NIEMALS selbst im Kopf") skalierte der Agent die Mengen
+   selbst — `portionen_skalieren` lief 0×. Eine Antwort-Validierung (wurde bei
+   Personenzahl-Vorgabe das Tool aufgerufen?) mit einem Korrektur-Schritt hätte
+   das strukturell verhindert statt es nur zu erbitten.
+4. **Modellwechsel als Normalfall einplanen statt als Störung erleben.** Zwei
+   erzwungene Wechsel (defektes Tool-Calling bei `llama-3.3-70b`, deprecatete
+   Vision-Modelle) trafen ein System, dessen Prompts, `<think>`-Filter und
+   Verifier-Schrittkorridore auf ein Modellverhalten kalibriert waren
+   ([reflexion_drift.md](reflexion_drift.md)). Ein kleines Modell-Smoke-Testset
+   („kann das Modell unsere 5 Tools korrekt callen?") ab Tag 1 hätte jeden
+   Wechsel von Stunden auf Minuten verkürzt.
+5. **Mit der einfachsten Retrieval-Lösung anfangen.** Der erste RAG-Anlauf
+   (Embedding-Modell + Vektor-Stack) scheiterte am
+   2,27-GB-Modell-Download im laufenden Request und wurde komplett ersetzt.
+   Das selbstgebaute BM25 (~40 Zeilen) erfüllt denselben Zweck offline und
+   testbar (§ 2.6). Die Lehre ist übertragbar: erst die einfachste Lösung, die
+   das Verhalten zeigt — ausbauen, wenn der Korpus es verlangt, nicht vorher.

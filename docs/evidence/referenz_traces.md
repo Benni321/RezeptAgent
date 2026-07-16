@@ -36,7 +36,7 @@ mit `trace_id`, `dauer_ms`, `status` je Schritt): `traces/referenz_<a-d>.json`.*
 - **Tatsächliche Trajektorie:** recherche_rezepte → naehrwerte_schaetzen → recherche_rezepte → naehrwerte_schaetzen → recherche_rezepte → naehrwerte_schaetzen → recherche_rezepte → naehrwerte_schaetzen → wochenplan_zusammenstellen — 9 TAO-Zyklen
 - **Roh-Trace:** [traces/referenz_b.json](traces/referenz_b.json) (trace_id `ccfb59223863`)
 
-**P2-Nachweis:** Dieser Trace enthält **9 vollständige TAO-Zyklen** (gefordert: ≥ 3), oben einzeln beschriftet.
+**P2-Nachweis:** Dieser Trace enthält **9 vollständige TAO-Zyklen** (gefordert: ≥ 3), oben einzeln beschriftet. Transparenz: Dieser Lauf geht über den code-orchestrierten Wochenplan-Pfad (Struktur garantiert der Code, Inhalte entscheidet das LLM — PROJEKTDOKU § 2.4); einen voll agentischen Lauf mit ≥ 3 Zyklen zeigt [eval_traces/kcal_limit_einzelrezept.json](eval_traces/kcal_limit_einzelrezept.json).
 
 
 **TAO-Zyklus 1 — [Thought → Action]** Sub-Agent `recherche_rezepte`

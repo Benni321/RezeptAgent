@@ -159,7 +159,12 @@ mit `trace_id`, `dauer_ms`, `status` je Schritt): `traces/referenz_<a-d>.json`.*
         p2 = ""
         if key == "b":
             p2 = (f"\n\n**P2-Nachweis:** Dieser Trace enthält **{zyklen} vollständige "
-                  "TAO-Zyklen** (gefordert: ≥ 3), oben einzeln beschriftet.")
+                  "TAO-Zyklen** (gefordert: ≥ 3), oben einzeln beschriftet. Transparenz: "
+                  "Dieser Lauf geht über den code-orchestrierten Wochenplan-Pfad "
+                  "(Struktur garantiert der Code, Inhalte entscheidet das LLM — "
+                  "PROJEKTDOKU § 2.4); einen voll agentischen Lauf mit ≥ 3 Zyklen zeigt "
+                  "[eval_traces/kcal_limit_einzelrezept.json]"
+                  "(eval_traces/kcal_limit_einzelrezept.json).")
         teile.append(f"""## ({key}) {ref['titel']}
 
 - **Eingabe:** „{ref['eingabe']}“
