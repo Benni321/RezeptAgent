@@ -106,7 +106,7 @@ def fuehre_fall_aus(fall: dict) -> dict:
         "eingabe": eingabe,
         "profil": fall.get("profil"),
         "kochbuch": fall.get("kochbuch"),
-        "modell": os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        "modell": os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         "datum": date.today().isoformat(),
     }
     try:

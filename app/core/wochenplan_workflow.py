@@ -77,9 +77,10 @@ _WOCHENPLAN_HINWEISE = re.compile(
 
 def _modell(temperature: float = 0) -> ChatGroq:
     return ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=temperature,
         max_retries=5,
+        reasoning_effort="none",  # Reasoning-Tokens sparen (TPM-Budget, s. orchestrator.py)
     )
 
 

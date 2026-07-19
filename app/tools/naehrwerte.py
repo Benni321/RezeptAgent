@@ -136,9 +136,10 @@ def _hole_schaetzung(rezept_titel: str, zutaten: list[str]) -> dict[str, float] 
     schaetze_kcal_pro_portion (Zahl fuer den Wochenplan-Workflow) -- keine Duplizierung.
     """
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,  # transiente 429 (Free-Tier-TPM) automatisch abfangen (W9)
+        reasoning_effort="none",  # Reasoning-Tokens sparen (TPM-Budget, s. orchestrator.py)
     )
     try:
         antwort = model.invoke([HumanMessage(content=_baue_prompt(rezept_titel, zutaten))])

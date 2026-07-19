@@ -2,8 +2,8 @@
 Vision-Modul: Zutatenerkennung aus einem Foto (Phase 2c)   [W2]
 ===============================================================
 Verarbeitet eine NICHT-textuelle Modalitaet (Bild) als Eingabe: ein Foto vom
-Kuehlschrank/Vorrat wird an ein Vision-Language-Model (Groq Llama-4, multimodal)
-gegeben, das die sichtbaren Lebensmittel als Liste zurueckgibt.
+Kuehlschrank/Vorrat wird an ein Vision-Language-Model (multimodales Qwen auf
+Groq) gegeben, das die sichtbaren Lebensmittel als Liste zurueckgibt.
 
 Designentscheidung (sinnvoll statt aufgesetzt):
 - Bewusst KEIN eigener Agent, sondern ein vorgelagerter Vision-Schritt. Die
@@ -13,7 +13,11 @@ Designentscheidung (sinnvoll statt aufgesetzt):
   angezeigt, bevor der Orchestrator darauf aufbaut. Grund: VLMs halluzinieren
   auch bei Bildern (VL5) -> Human-in-the-Loop.
 
-Modell ueber GROQ_VISION_MODEL konfigurierbar (Default: multimodales Llama-4).
+Modell ueber GROQ_VISION_MODEL konfigurierbar. Default: qwen/qwen3.6-27b --
+dasselbe multimodale Modell wie fuer Text (GROQ_MODEL). Die Vorgaenger
+(llama-4-scout, davor llama-3.2-vision) wurden von Groq zurueckgezogen
+(Modell-Drift, siehe docs/reflexion_drift.md); der Wechsel auf ein Modell fuer
+beides reduziert diese Angriffsflaeche auf eine einzige Deprecation-Quelle.
 """
 
 import base64
@@ -24,6 +28,8 @@ import re
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
+
+from app.core.text_utils import entferne_reasoning
 
 load_dotenv()
 
@@ -75,9 +81,10 @@ def erkenne_zutaten_aus_bild(image_bytes: bytes, mime_type: str = "image/jpeg") 
         Liste erkannter Zutaten (kann leer sein, wenn nichts erkannt wurde).
     """
     model = ChatGroq(
-        model=os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct"),
+        model=os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,  # transiente 429 automatisch abfangen (W9)
+        reasoning_effort="none",  # Reasoning-Tokens sparen (TPM-Budget, s. orchestrator.py)
     )
     nachricht = HumanMessage(
         content=[
@@ -86,4 +93,7 @@ def erkenne_zutaten_aus_bild(image_bytes: bytes, mime_type: str = "image/jpeg") 
         ]
     )
     antwort = model.invoke([nachricht])
-    return _parse_zutaten(antwort.content)
+    # entferne_reasoning: Qwen-Modelle stellen einen <think>-Block voran; ohne
+    # Filter wuerde der Zeilen-Fallback von _parse_zutaten den Denktext in
+    # Dutzende Pseudo-"Zutaten" zerlegen (real passiert beim Modellwechsel 2026-07).
+    return _parse_zutaten(entferne_reasoning(antwort.content))

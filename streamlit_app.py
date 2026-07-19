@@ -47,15 +47,6 @@ st.title("🍳 RezeptAgent")
 st.caption("Sag, was du hast – der Agent recherchiert ein Rezept und sagt dir, was dir fehlt.")
 
 
-def _ableiten_titel(antwort: str) -> str:
-    """Erste sinnvolle Zeile der Antwort als Rezept-Titel (fuer die Bewertung)."""
-    for zeile in antwort.splitlines():
-        z = zeile.strip().lstrip("#*-•0123456789. ").strip()
-        if z:
-            return z[:80]
-    return "Rezept"
-
-
 def _lade_profil():
     """Holt das gespeicherte Profil; gibt (profil, backend_ok) zurueck."""
     try:
@@ -196,7 +187,11 @@ if absenden:
     ergebnis = antwort.json()
     # In session_state ablegen, damit die Anzeige beim Bewerten (Rerun) erhalten bleibt.
     st.session_state["ergebnis"] = ergebnis
-    st.session_state["titel"] = _ableiten_titel(ergebnis.get("antwort", ""))
+    # Rezeptname kommt als eigenes Feld vom Backend (extrahiere_rezept_titel);
+    # neutraler Platzhalter statt (wie frueher) der ersten Prosa-Zeile der Antwort,
+    # die bei Fehlerfaellen Saetze wie "Da die Rezeptrecherche fehlgeschlagen
+    # ist, ..." als Rezeptnamen vorschlug. Das Feld bleibt editierbar.
+    st.session_state["titel"] = ergebnis.get("rezept_titel") or "Rezept"
 
 # --- Anzeige: lebt aus session_state, ueberlebt Reruns --------------------------
 if "ergebnis" in st.session_state:

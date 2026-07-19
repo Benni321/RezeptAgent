@@ -62,9 +62,10 @@ def create_recherche_agent():
     # max_retries hoch: faengt transiente 429 (Groq Free-Tier, 12k TPM) automatisch
     # mit Backoff ab, statt den ganzen Lauf abzubrechen (Robustheit, W9).
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,
+        reasoning_effort="none",  # Reasoning-Tokens sparen (TPM-Budget, s. orchestrator.py)
     )
     # max_results=3 statt 5: weniger Such-"Rauschen" im Sub-Agent-Kontext -> weniger
     # Tokens (schont das Free-Tier-TPM-Limit) und reicht fuer die Rezeptauswahl.

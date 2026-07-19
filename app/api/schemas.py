@@ -65,3 +65,4 @@ class ChatAntwort(BaseModel):
     trace: list[TraceSchritt] = Field(default_factory=list)
     erkannte_zutaten: Optional[list[str]] = None
     trace_id: Optional[str] = None  # verknuepft die Antwort mit den JSON-Logs (W5)
+    rezept_titel: Optional[str] = None  # extrahierter Rezeptname fuer Bewertung/Kochbuch (None = kein belastbarer Titel)

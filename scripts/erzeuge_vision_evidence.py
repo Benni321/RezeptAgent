@@ -61,7 +61,7 @@ def main() -> None:
     dok = f"""# Evidence W2: Multimodale Eingabe — Kühlschrank-Foto → Zutaten → Rezept
 
 *Realer Lauf am {date.today().isoformat()} mit echtem Foto und echten API-Keys
-(Groq-VLM `{os.getenv('GROQ_VISION_MODEL', 'meta-llama/llama-4-scout-17b-16e-instruct')}`
+(Groq-VLM `{os.getenv('GROQ_VISION_MODEL', 'qwen/qwen3.6-27b')}`
 für die Zutatenerkennung, danach der normale Agenten-Lauf). Reproduzierbar über
 `python scripts/erzeuge_vision_evidence.py`. Leeres Profil, damit der Nachweis
 allein die Bildverarbeitung belegt.*

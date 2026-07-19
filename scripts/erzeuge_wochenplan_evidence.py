@@ -16,7 +16,7 @@ Hinweis (ehrliche Grenze): Ein Wochenplan mit mehreren Recherchen + Naehrwert-
 Checks ist token-intensiv. Im Groq-Free-Tier gibt es ein Minuten- (TPM) UND ein
 Tages-Limit (TPD). Bei erschoepftem Budget bricht der Lauf mit einem 429 ab --
 dann spaeter erneut ausfuehren (frisches Budget) oder einen bezahlten Tier nutzen.
-Laeuft mit dem Standardmodell aus GROQ_MODEL (Default qwen/qwen3-32b).
+Laeuft mit dem Standardmodell aus GROQ_MODEL (Default qwen/qwen3.6-27b).
 """
 
 import json

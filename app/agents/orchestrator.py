@@ -93,9 +93,12 @@ WENN ETWAS SCHIEFGEHT (reagiere sichtbar, statt abzubrechen oder zu erfinden):
   an die harte Vorgabe (Regel 0) oder schlage eine passende Alternative vor -
   ignoriere weder das eine noch das andere stillschweigend.
 
-Formuliere am Ende eine klare deutsche Antwort: gewaehltes Rezept (Zutaten +
-Zubereitung) und - falls erstellt - die passende Einkaufsliste. Erfinde keine
-Fakten; bei Unklarheit sinnvoll annehmen und kurz hinweisen."""
+Formuliere am Ende eine klare deutsche Antwort. Beginne sie IMMER mit einer
+Ueberschrift, die NUR den Namen des gewaehlten Rezepts enthaelt (Format:
+"## <Rezeptname>") - auch dann, wenn das Rezept aus deinem eigenen Wissen
+stammt. Danach: gewaehltes Rezept (Zutaten + Zubereitung) und - falls erstellt -
+die passende Einkaufsliste. Erfinde keine Fakten; bei Unklarheit sinnvoll
+annehmen und kurz hinweisen."""
 
 def create_orchestrator():
     """
@@ -109,9 +112,13 @@ def create_orchestrator():
     # damit den sequenziellen TAO-Zyklus -- der aber genau der sichtbare Kern von
     # Bewertungs-Dimension 2 ist. So bleibt der Trace echt schrittweise statt gebatcht.
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,  # transiente 429 (Free-Tier-TPM) automatisch abfangen (W9)
+        # reasoning_effort="none": Qwen-Reasoning-Tokens (<think>) abschalten.
+        # Sie zaehlen voll ins TPM-Budget (8k/min Free-Tier) und machten den
+        # Agenten nach dem Modellwechsel 2026-07 spuerbar langsam (429-Backoffs).
+        reasoning_effort="none",
         model_kwargs={"parallel_tool_calls": False},
     )
 
