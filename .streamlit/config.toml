@@ -1,0 +1,5 @@
+# Streamlit-Theme: neutrale, ruhige Primaerfarbe (Schieferblau) statt des
+# Streamlit-Standard-Rots. Wirkt auf Primaer-Buttons ("Rezept finden",
+# "Speichern & loslegen"), Slider, Fokus-Rahmen und Auswahl-Akzente.
+[theme]
+primaryColor = "#64748B"

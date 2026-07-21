@@ -24,6 +24,8 @@ env/
 data/praeferenzen.json
 # Laufzeit-Daten: aus Bewertungen GELERNTE Kochbuch-Rezepte (Seeds bleiben versioniert)
 data/rezepte/gelernt_*.json
+# Laufzeit-Daten: vom Nutzer gespeicherte Wochenplaene
+data/wochenplaene/
 
 # Logs
 *.log

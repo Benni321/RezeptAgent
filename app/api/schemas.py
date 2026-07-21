@@ -66,3 +66,30 @@ class ChatAntwort(BaseModel):
     erkannte_zutaten: Optional[list[str]] = None
     trace_id: Optional[str] = None  # verknuepft die Antwort mit den JSON-Logs (W5)
     rezept_titel: Optional[str] = None  # extrahierter Rezeptname fuer Bewertung/Kochbuch (None = kein belastbarer Titel)
+    gerichte: Optional[list[dict]] = None  # NUR bei Wochenplan-Antworten gesetzt (je {"titel", "zutaten"})
+
+
+class WochenplanSpeichern(BaseModel):
+    """Eingabe zum Sichern eines fertig geplanten Wochenplans (POST /wochenplan)."""
+
+    titel: str = Field(default="", max_length=100)
+    nachricht: str = Field(default="", max_length=2000)
+    antwort: str = Field(..., min_length=1)
+    gerichte: list[dict] = Field(..., min_length=1)
+
+
+class KochbuchRezeptSpeichern(BaseModel):
+    """Eingabe fuer ein manuell hinzugefuegtes Kochbuch-Rezept (POST /kochbuch)."""
+
+    titel: str = Field(..., min_length=1, max_length=100)
+    zutaten: list[str] = Field(..., min_length=1, max_length=50)
+    zubereitung: list[str] = Field(default_factory=list, max_length=30)
+    sterne: Optional[int] = Field(default=None, ge=1, le=5)
+
+
+class WochenplanAusKochbuch(BaseModel):
+    """Eingabe zum deterministischen Zusammenstellen eines Wochenplans aus
+    bereits gespeicherten Kochbuch-Rezepten (POST /wochenplan/aus-kochbuch)."""
+
+    rezept_titel: list[str] = Field(..., min_length=1, max_length=7)
+    vorhandene_zutaten: list[str] = Field(default_factory=list, max_length=50)

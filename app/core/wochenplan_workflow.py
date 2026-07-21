@@ -88,13 +88,21 @@ def _json_aus_text(text: str) -> dict | None:
     """Zieht das erste JSON-Objekt aus einer Modellantwort (robust gegen Beiwerk).
 
     Entfernt zuerst <think>-Bloecke (qwen3): deren geschweifte Klammern wuerden den
-    Parser sonst auf das falsche Objekt fuehren.
+    Parser sonst auf das falsche Objekt fuehren. Zusaetzlich robust gegen zwei
+    haeufige Modell-Marotten, die reines json.loads() sonst scheitern lassen:
+    Markdown-Codefences (```json ... ```) und ueberzaehlige Kommas vor der
+    schliessenden Klammer ("... "b",]"). Ohne diese Toleranz schlug die Extraktion
+    im Wochenplan-Workflow real haeufiger fehl, als die Suche selbst rechtfertigte
+    (beobachtet: schnelle "fehler"-Spans trotz inhaltlich brauchbarer Modellantwort).
     """
-    treffer = re.search(r"\{.*\}", entferne_reasoning(text or ""), re.DOTALL)
+    bereinigt = entferne_reasoning(text or "")
+    bereinigt = re.sub(r"```(?:json)?\s*|\s*```", "", bereinigt)
+    treffer = re.search(r"\{.*\}", bereinigt, re.DOTALL)
     if not treffer:
         return None
+    roh = re.sub(r",(\s*[}\]])", r"\1", treffer.group(0))  # trailing commas entfernen
     try:
-        wert = json.loads(treffer.group(0))
+        wert = json.loads(roh)
         return wert if isinstance(wert, dict) else None
     except json.JSONDecodeError:
         return None
@@ -118,7 +126,15 @@ def erkenne_wochenplan(nachricht: str, model: ChatGroq | None = None) -> dict | 
         "Setze wochenplan=false, wenn nur EIN Gericht gewuenscht ist.\n\n"
         f"Anfrage: {nachricht}"
     )
-    daten = _json_aus_text(model.invoke([HumanMessage(content=prompt)]).content)
+    try:
+        antwort_text = model.invoke([HumanMessage(content=prompt)]).content
+    except Exception:
+        # Fehler wird zur Entscheidung, nicht zum Absturz (gleiches Muster wie in
+        # recherche_agent.py/naehrwerte.py): keine Erkennung moeglich -> Anfrage
+        # laeuft als normales Einzelrezept weiter, statt die ganze Anfrage mit
+        # einem 502 abzubrechen.
+        return None
+    daten = _json_aus_text(antwort_text)
     if not daten or not daten.get("wochenplan"):
         return None
     try:
@@ -143,10 +159,15 @@ def erkenne_wochenplan(nachricht: str, model: ChatGroq | None = None) -> dict | 
 
 
 def _extrahiere_rezept(recherche_text: str, vermeide_titel: list[str], model: ChatGroq) -> dict | None:
-    """Extrahiert EIN konkretes Rezept (Titel + Zutaten) aus der Recherche-Antwort.
+    """Extrahiert EIN konkretes Rezept (Titel + Zutaten + Zubereitung, falls
+    vorhanden) aus der Recherche-Antwort.
 
     Waehlt bewusst ein Gericht, das sich von den bereits geplanten unterscheidet
     (Abwechslung). Gibt None zurueck, wenn nichts Brauchbares extrahierbar ist.
+    Der Recherche-Sub-Agent liefert laut eigenem Prompt bereits "Kurze
+    Zubereitung (Stichpunkte)" je Rezept (siehe recherche_agent.py) -- die wird
+    hier mit herausgezogen, damit ein Wochenplan-Gericht nicht nur Zutaten,
+    sondern (wenn im Suchtext vorhanden) auch Zubereitungsschritte speichert.
     """
     if not recherche_text or recherche_text.startswith(("WEBSUCHE", "RECHERCHE-FEHLER")):
         return None
@@ -159,14 +180,46 @@ def _extrahiere_rezept(recherche_text: str, vermeide_titel: list[str], model: Ch
     prompt = (
         "Waehle aus den folgenden Rezept-Suchergebnissen EIN konkretes Rezept und gib "
         "es als JSON zurueck:\n"
-        '{"titel": "<Name>", "zutaten": ["<Zutat 1>", "<Zutat 2>", ...]}\n'
+        '{"titel": "<Name>", "zutaten": ["<Zutat 1>", "<Zutat 2>", ...], '
+        '"zubereitung": ["<Schritt 1>", "<Schritt 2>", ...]}\n'
+        "Das Feld 'zubereitung' nur fuellen, wenn die Suchergebnisse tatsaechlich "
+        "Zubereitungsschritte nennen -- sonst ein leeres Array []. "
         "Nur echte, im Text genannte Rezepte; erfinde nichts. Antworte NUR mit dem JSON."
         f"{hinweis}\n\nSuchergebnisse:\n{recherche_text}"
     )
-    daten = _json_aus_text(model.invoke([HumanMessage(content=prompt)]).content)
+    try:
+        antwort_text = model.invoke([HumanMessage(content=prompt)]).content
+    except Exception:
+        # Ein Modellfehler (z. B. transientes Rate-Limit trotz max_retries) darf
+        # nicht die ganze Wochenplan-Anfrage abbrechen -- dieses eine Gericht gilt
+        # dann als "kein passendes Rezept gefunden" (kcal_notizen-Zeile im Aufrufer).
+        return None
+    daten = _json_aus_text(antwort_text)
     if not daten or not daten.get("titel") or not isinstance(daten.get("zutaten"), list):
         return None
-    return {"titel": str(daten["titel"]).strip(), "zutaten": [str(z).strip() for z in daten["zutaten"] if str(z).strip()]}
+    zubereitung = daten.get("zubereitung")
+    return {
+        "titel": str(daten["titel"]).strip(),
+        "zutaten": [str(z).strip() for z in daten["zutaten"] if str(z).strip()],
+        "zubereitung": ([str(s).strip() for s in zubereitung if str(s).strip()]
+                        if isinstance(zubereitung, list) else []),
+    }
+
+
+def _rohe_antwort(gerichte: list[dict], plan_text: str, kcal_notizen: list[str]) -> str:
+    """Deterministischer Text OHNE LLM -- Fallback, wenn die Formulierung scheitert.
+
+    Verliert nicht die bereits gefundenen Gerichte/die Einkaufsliste nur, weil der
+    letzte, rein kosmetische LLM-Schritt fehlschlaegt (gleiche Haltung wie bei
+    NAEHRWERT-FEHLER: ein Fehler wird sichtbar gemacht, nicht verschluckt).
+    """
+    gerichte_text = "\n".join(f"- {g['titel']}: {', '.join(g['zutaten'])}" for g in gerichte)
+    notizen = "\n".join(kcal_notizen)
+    return (
+        f"Dein Wochenplan:\n{gerichte_text}\n\n"
+        f"Kalorien-Hinweise (Naeherung ohne verifizierte DB):\n{notizen}\n\n"
+        f"{plan_text}"
+    )
 
 
 def _formuliere_antwort(gerichte: list[dict], plan_text: str, kcal_notizen: list[str], model: ChatGroq) -> str:
@@ -184,7 +237,13 @@ def _formuliere_antwort(gerichte: list[dict], plan_text: str, kcal_notizen: list
         f"Kalorien-Hinweise (Naeherung ohne verifizierte DB):\n{notizen}\n\n"
         f"Plan + Einkaufsliste:\n{plan_text}"
     )
-    return entferne_reasoning(model.invoke([HumanMessage(content=prompt)]).content)
+    try:
+        return entferne_reasoning(model.invoke([HumanMessage(content=prompt)]).content)
+    except Exception:
+        # Die gefundenen Gerichte + Einkaufsliste sind bereits deterministisch fertig
+        # (wochenplan_zusammenstellen) -- ein Fehler NUR bei der sprachlichen
+        # Formulierung soll das Ergebnis nicht wegwerfen.
+        return _rohe_antwort(gerichte, plan_text, kcal_notizen)
 
 
 def plane_woche(
@@ -210,10 +269,19 @@ def plane_woche(
     gerichte: list[dict] = []
     kcal_notizen: list[str] = []
 
+    fehlgeschlagene_versuche = 0
     for i in range(anzahl):
         such_anfrage = f"{nachricht} {zusatz}".strip()
         if gerichte:
             such_anfrage += f" (anderes Gericht als: {', '.join(g['titel'] for g in gerichte)})"
+        elif fehlgeschlagene_versuche:
+            # Bug-Fix: Ohne diese Variation wiederholt ein fehlgeschlagener Versuch
+            # (Recherche ohne brauchbaren Treffer ODER Extraktion konnte kein JSON
+            # herauslesen) exakt dieselbe Anfrage -- die aus demselben Grund erneut
+            # scheitert. Beobachtet: 4 gewuenschte Gerichte, aber nur 1 kam durch,
+            # weil Versuch 2-4 identisch zu Versuch 1 waren. Eine leichte
+            # Formulierungs-Variation gibt der naechsten Recherche eine echte Chance.
+            such_anfrage += f" (bitte eine ANDERE Rezeptidee vorschlagen, Versuch {fehlgeschlagene_versuche + 1})"
 
         recherche_text = _recherche_mit_trace(such_anfrage, trace, {"anfrage": such_anfrage})
 
@@ -222,6 +290,7 @@ def plane_woche(
         log_span(logger, "llm", "rezept_extraktion", dauer_ms=_dauer_ms(t_llm),
                  status="ok" if rezept else "fehler")
         if rezept is None:
+            fehlgeschlagene_versuche += 1
             kcal_notizen.append(f"Gericht {i + 1}: kein passendes Rezept aus der Recherche gefunden.")
             continue
 
@@ -284,9 +353,21 @@ def plane_woche(
 
     if not gerichte:
         return {"antwort": "Ich konnte leider keine passenden Rezepte fuer den Wochenplan finden.",
-                "trace": trace, "erkannte_zutaten": None}
+                "trace": trace, "erkannte_zutaten": None, "gerichte": []}
+
+    # Transparenz statt stiller Kuerzung: wurden weniger Gerichte gefunden als
+    # gewuenscht, soll das in der Antwort sichtbar sein -- nicht nur als beilaeufige
+    # Notiz zwischen den Kalorien-Hinweisen untergehen (gleicher Grundsatz wie bei
+    # NAEHRWERT-FEHLER: ehrlich zeigen statt beschoenigen).
+    if len(gerichte) < anzahl:
+        kcal_notizen.insert(
+            0, f"Hinweis: Nur {len(gerichte)} von {anzahl} gewuenschten Gerichten "
+               "konnten geplant werden (siehe Details unten)."
+        )
 
     t_llm = time.monotonic()
     antwort = _formuliere_antwort(gerichte, plan_text, kcal_notizen, model)
     log_span(logger, "antwort", "antwort_formulierung", dauer_ms=_dauer_ms(t_llm))
-    return {"antwort": antwort, "trace": trace, "erkannte_zutaten": None}
+    # "gerichte" strukturiert mitgeben: die Wochenplan-Seite der GUI speichert und
+    # rendert den Plan daraus, ohne den Antwort-Text parsen zu muessen.
+    return {"antwort": antwort, "trace": trace, "erkannte_zutaten": None, "gerichte": gerichte}

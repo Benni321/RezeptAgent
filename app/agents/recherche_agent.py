@@ -59,13 +59,22 @@ Rezeptinformationen daraus."""
 
 def create_recherche_agent():
     """Erstellt den Recherche-Sub-Agenten (ReAct mit eigenem web_search-Tool)."""
-    # max_retries hoch: faengt transiente 429 (Groq Free-Tier, 12k TPM) automatisch
+    # max_retries hoch: faengt transiente 429 (Groq Free-Tier-TPM) automatisch
     # mit Backoff ab, statt den ganzen Lauf abzubrechen (Robustheit, W9).
+    #
+    # Modell-Split (2026-07): Der Sub-Agent laeuft auf einem KLEINEN Modell
+    # (GROQ_MODEL_KLEIN), nicht auf dem Orchestrator-Modell. Zwei Gruende:
+    # (1) Die Aufgabe ist ein abgeschlossener Einzelschritt ohne Planung
+    #     (suchen, Treffer zusammenfassen) -- dafuer reicht ein 8B-Modell.
+    # (2) Groq-Limits gelten PRO Modell: Der tokenhungrigste Teil (Web-Treffer
+    #     im Kontext) zieht so aus einem EIGENEN TPM-Topf statt das Budget des
+    #     Orchestrators zu erschoepfen (weniger 429-Backoffs).
+    # Kein reasoning_effort-Parameter: llama-3.1 ist kein Reasoning-Modell;
+    # falls jemand ein Qwen-Modell konfiguriert, filtert entferne_reasoning unten.
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
+        model=os.getenv("GROQ_MODEL_KLEIN", "llama-3.1-8b-instant"),
         temperature=0,
         max_retries=5,
-        reasoning_effort="none",  # Reasoning-Tokens sparen (TPM-Budget, s. orchestrator.py)
     )
     # max_results=3 statt 5: weniger Such-"Rauschen" im Sub-Agent-Kontext -> weniger
     # Tokens (schont das Free-Tier-TPM-Limit) und reicht fuer die Rezeptauswahl.

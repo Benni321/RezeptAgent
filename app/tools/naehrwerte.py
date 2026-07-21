@@ -135,11 +135,14 @@ def _hole_schaetzung(rezept_titel: str, zutaten: list[str]) -> dict[str, float] 
     Gemeinsamer Kern von naehrwerte_schaetzen (Tool, Text-Ausgabe) und
     schaetze_kcal_pro_portion (Zahl fuer den Wochenplan-Workflow) -- keine Duplizierung.
     """
+    # Modell-Split (2026-07): reine Schaetz-Completion ohne Tool-Calling -- der
+    # einfachste Kandidat fuer das kleine Modell mit eigenem TPM-Topf
+    # (Begruendung: recherche_agent.py). entferne_reasoning unten haelt die
+    # Funktion modell-agnostisch, falls doch ein Qwen-Modell konfiguriert wird.
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
+        model=os.getenv("GROQ_MODEL_KLEIN", "llama-3.1-8b-instant"),
         temperature=0,
         max_retries=5,  # transiente 429 (Free-Tier-TPM) automatisch abfangen (W9)
-        reasoning_effort="none",  # Reasoning-Tokens sparen (TPM-Budget, s. orchestrator.py)
     )
     try:
         antwort = model.invoke([HumanMessage(content=_baue_prompt(rezept_titel, zutaten))])
