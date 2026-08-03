@@ -1,27 +1,11 @@
 {
-  "id": "glutenfrei_profil",
-  "beschreibung": "Harter Constraint aus dem Profil: glutenfrei - bei einer Nudel-Anfrage. Der Agent muss das Thema adressieren und darf keine Gluten-Quellen listen.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Ich moechte heute etwas mit Nudeln kochen.",
-    "modus": "einkaufsliste"
-  },
-  "profil": {
-    "ernaehrung": [
-      "glutenfrei"
-    ],
-    "geschmack": [],
-    "wichtig": [],
-    "bewertungen": {}
-  },
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "e18fd94e5e1e",
+  "zeit_start": "2026-08-02T14:36:39",
+  "dauer_ms": 55342,
+  "eingabe": "Ich moechte heute etwas mit Nudeln kochen.",
+  "modus": "einkaufsliste",
   "antwort": "## Glutenfreie Nudeln (Klassisch mit Xanthan)\n\nHier ist ein einfaches und bewährtes Rezept für selbstgemachte glutenfreie Nudeln. Da du den Modus \"Einkaufsliste\" gewählt hast, erstelle ich dir im nächsten Schritt eine Liste der fehlenden Zutaten.\n\n**Zutaten (für 2 Personen):**\n*   200 g glutenfreie Mehlmischung (z. B. aus Reis- und Maismehl)\n*   1/2 TL Xanthan\n*   1 Prise Salz\n*   2 große Eier\n*   Etwas Olivenöl oder neutrales Öl zum Ausrollen (optional)\n\n**Zubereitung:**\n1.  Die glutenfreie Mehlmischung, das Xanthan und das Salz in einer großen Schüssel vermischen und einen kleinen Haufen formen.\n2.  Die Eier in die Mitte des Mehlschüttels schlagen.\n3.  Mit einer Gabel oder den Händen das Mehl nach und nach zu den Eiern arbeiten, bis der Teig krümelig wird.\n4.  Den Teig mit den Händen zu einem glatten Ball verkneten. Falls er zu trocken ist, einen Schluck Wasser hinzufügen; zu feucht, etwas mehr Mehl.\n5.  Den Teig auf einer leicht bemehlten Arbeitsfläche ausrollen (ca. 2–3 mm dick).\n6.  Die Nudeln in Streifen schneiden oder mit einer Nudelmaschine durchziehen.\n7.  In reichlich kochendem Salzwasser ca. 3–5 Minuten garen, bis sie al dente sind. Abgießen und sofort mit der gewünschten Soße servieren.\n\nDamit ich dir die Einkaufsliste erstellen kann: **Welche dieser Zutaten hast du bereits zu Hause?** (Bitte liste sie auf, z. B. \"Eier, Salz, Olivenöl\").",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -38,19 +22,5 @@
       "dauer_ms": 16621,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "erwaehnt_eines",
-      "status": "bestanden",
-      "detail": "gefunden: ['glutenfrei']"
-    },
-    {
-      "typ": "verbotene_zutaten",
-      "status": "bestanden",
-      "detail": "12 Listenzeilen geprueft, keine verbotene Zutat"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 55.3
+  ]
 }

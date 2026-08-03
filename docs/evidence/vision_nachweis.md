@@ -1,5 +1,14 @@
 # Evidence W2: Multimodale Eingabe — Kühlschrank-Foto → Zutaten → Rezept
 
+> **Hinweis (2026-08-02):** Dieser Nachweis entstand mit dem VLM
+> `llama-4-scout`, das Groq inzwischen zurückgezogen hat; aktuell nutzt das
+> System `qwen/qwen3.6-27b` für Text **und** Vision (Modell-Drift, siehe
+> [reflexion_drift.md](../reflexion_drift.md)). Die Neuerzeugung mit dem
+> Nachfolger (`python scripts/erzeuge_vision_evidence.py`) scheiterte am
+> 2026-08-02 am Groq-Tages-Token-Limit (TPD, durch den Eval-Re-Run desselben
+> Tags aufgebraucht) und wird mit frischem Tagesbudget nachgeholt — das Skript
+> überschreibt dann diese Datei samt Hinweis.
+
 *Realer Lauf am 2026-07-15 mit echtem Foto und echten API-Keys
 (Groq-VLM `meta-llama/llama-4-scout-17b-16e-instruct`
 für die Zutatenerkennung, danach der normale Agenten-Lauf). Reproduzierbar über

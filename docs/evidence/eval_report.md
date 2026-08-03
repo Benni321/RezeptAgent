@@ -1,6 +1,6 @@
 # Eval-Report: Constraint-Treue des RezeptAgenten (VL09)
 
-*Reale Laeufe gegen den echten Agenten (Groq `qwen/qwen3-32b` + Tavily), Stand 2026-07-15.*
+*Reale Laeufe gegen den echten Agenten (Groq `qwen/qwen3.6-27b` + Tavily), Stand 2026-08-03.*
 *Erzeugt mit `python evals/run_eval.py`; Checks: `evals/verifier.py` (programmatisch,*
 *ternaer, kein LLM-Judge — Begruendung in `evals/README.md`). Roh-Traces mit voller*
 *Antwort und allen TAO-Schritten: `docs/evidence/eval_traces/<fall-id>.json`.*
@@ -8,8 +8,8 @@
 ## Gesamtquoten
 
 - **Faelle:** 15 gelaufen, davon 10 ohne Verletzung
-- **Checks:** 45 gesamt — ✓ 39 bestanden · ○ 0 neutral · ✗ 6 verletzt
-- **Bestanden-Quote (ohne neutral):** 39/45 = 87%
+- **Checks:** 45 gesamt — ✓ 35 bestanden · ○ 4 neutral · ✗ 6 verletzt
+- **Bestanden-Quote (ohne neutral):** 35/41 = 85%
 
 Legende: ✓ bestanden · ○ neutral (nicht entscheidbar/anwendbar) · ✗ verletzt.
 „Schwer“ = bewusst so gebaut, dass der Agent voraussichtlich scheitert
@@ -19,21 +19,21 @@ Legende: ✓ bestanden · ○ neutral (nicht entscheidbar/anwendbar) · ✗ verl
 
 | Fall | Schwer? | ✓ | ○ | ✗ | Aktionen | Dauer | Gesamt |
 |------|---------|---|---|---|----------|-------|--------|
-| `einfach_tomate_mozzarella` | — | 4 | 0 | 0 | 1 | 19.3 s | ✓ |
-| `kcal_limit_einzelrezept` | — | 3 | 0 | 0 | 3 | 150.3 s | ✓ |
-| `portionen_skalierung` | — | 3 | 0 | 0 | 2 | 80.2 s | ✓ |
-| `vegan_profil` | — | 3 | 0 | 0 | 1 | 69.3 s | ✓ |
-| `glutenfrei_profil` | — | 2 | 0 | 0 | 2 | 91.1 s | ✓ |
-| `konflikt_salami_vegetarisch` | — | 2 | 0 | 0 | 2 | 86.3 s | ✓ |
-| `wochenplan_3_kcal` | — | 5 | 0 | 1 | 13 | 274.3 s | ✗ |
-| `wochenplan_ohne_kcal` | — | 3 | 0 | 0 | 3 | 60.8 s | ✓ |
-| `leere_suche_fallback` | — | 3 | 0 | 0 | 1 | 55.3 s | ✓ |
-| `modus_vorhanden` | — | 2 | 0 | 0 | 1 | 52.3 s | ✓ |
-| `memory_schlecht_bewertet` | — | 1 | 0 | 1 | 1 | 67.8 s | ✗ |
-| `favoriten_rag` | — | 3 | 0 | 0 | 2 | 89.6 s | ✓ |
-| `schwer_kombi_constraints` | ja | 3 | 0 | 1 | 11 | 246.1 s | ✗ |
-| `schwer_skalierung_kette` | ja | 2 | 0 | 1 | 2 | 113.0 s | ✗ |
-| `schwer_kcal_tagessumme` | ja | 0 | 0 | 2 | 3 | 227.4 s | ✗ |
+| `einfach_tomate_mozzarella` | — | 4 | 0 | 0 | 1 | 24.7 s | ✓ |
+| `kcal_limit_einzelrezept` | — | 3 | 0 | 0 | 4 | 177.4 s | ✓ |
+| `portionen_skalierung` | — | 3 | 0 | 0 | 1 | 31.2 s | ✓ |
+| `vegan_profil` | — | 3 | 0 | 0 | 1 | 57.3 s | ✓ |
+| `glutenfrei_profil` | — | 2 | 0 | 0 | 1 | 55.3 s | ✓ |
+| `konflikt_salami_vegetarisch` | — | 2 | 0 | 0 | 1 | 37.8 s | ✓ |
+| `wochenplan_3_kcal` | — | 2 | 2 | 2 | 4 | 188.1 s | ✗ |
+| `wochenplan_ohne_kcal` | — | 3 | 0 | 0 | 3 | 65.6 s | ✓ |
+| `leere_suche_fallback` | — | 2 | 0 | 1 | 2 | 113.6 s | ✗ |
+| `modus_vorhanden` | — | 2 | 0 | 0 | 0 | 1.7 s | ✓ |
+| `memory_schlecht_bewertet` | — | 1 | 0 | 1 | 1 | 108.3 s | ✗ |
+| `favoriten_rag` | — | 3 | 0 | 0 | 2 | 60.8 s | ✓ |
+| `schwer_kombi_constraints` | ja | 1 | 2 | 1 | 5 | 286.8 s | ✗ |
+| `schwer_skalierung_kette` | ja | 3 | 0 | 0 | 4 | 158.9 s | ✓ |
+| `schwer_kcal_tagessumme` | ja | 1 | 0 | 1 | 6 | 187.7 s | ✗ |
 
 ## Ergebnisse im Detail
 
@@ -46,34 +46,34 @@ Einfache Rezeptfrage - gerader Weg: genau EINE Recherche, dann Antwort (System-P
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `antwort_nicht_leer` | ✓ bestanden | 821 Zeichen |
+| `antwort_nicht_leer` | ✓ bestanden | 1580 Zeichen |
 | `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 1x aufgerufen |
 | `tool_nicht_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: nicht aufgerufen |
 | `schrittzahl` | ✓ bestanden | 1 Aktionen (Korridor 1-8) |
 
-> **Antwort (Auszug):** Ich schlage das **Tomaten-Mozzarella-Salat**-Rezept vor – ein klassisches, frisches Gericht: **Zutaten** (für 2 Portionen): - 400g Cherrytomaten - 200g Mozzarella (in Scheiben) - 50g Basilikumblätter - 2 EL Olivenöl - 1 EL Balsamico-Essig - Salz, Pfeffer **Zubereitung**: 1. Tomaten und Mozzarella in dünne Scheiben schn …
+> **Antwort (Auszug):** ## Cremiger Nudelauflauf mit Tomaten und Mozzarella Das klingt nach einem leckeren, sättigenden Gericht! Hier ist das Rezept für den **Cremigen Nudelauflauf mit Tomaten und Mozzarella**. **Zutaten (für 2 Personen):** * 200g Nudeln (z. B. Penne oder Fusilli) * 250g Kirschtomaten * 125g Mozzarella (in Würfel geschnitten) …
 
 ### `kcal_limit_einzelrezept`
 
 Harter Constraint: kcal-Vorgabe beim Einzelrezept. Der Agent MUSS naehrwerte_schaetzen aufrufen (nicht selbst schaetzen), genannte kcal muessen <= Limit sein.
 
 - **Eingabe:** „Schlag mir ein Abendessen mit maximal 500 kcal pro Portion vor.“ (Modus `einkaufsliste`)
-- **Trajektorie:** recherche_rezepte 1×, naehrwerte_schaetzen 1×, portionen_skalieren 1×
+- **Trajektorie:** recherche_rezepte 2×, naehrwerte_schaetzen 1×, einkaufsliste_erstellen 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `antwort_nicht_leer` | ✓ bestanden | 768 Zeichen |
+| `antwort_nicht_leer` | ✓ bestanden | 1431 Zeichen |
 | `tool_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: 1x aufgerufen |
-| `kcal_limit` | ✓ bestanden | alle 3 kcal-Angaben <= 500 |
+| `kcal_limit` | ✓ bestanden | alle 2 kcal-Angaben <= 500 |
 
-> **Antwort (Auszug):** **Vorgeschlagenes Rezept: Gebackener Lachs mit Spargel** **Kalorien:** ~480 kcal/Portion (unter deinem Limit von 500 kcal) **Zutaten (für 1 Portion):** - 150g Lachsfilet - 100g Spargel - 1 Zitrone (Saft) - 1 Knoblauchzehe - 1 EL Olivenöl - Salz, Pfeffer **Zubereitung:** 1. Lachsfilet mit Zitronensaft und zerdrücktem Kn …
+> **Antwort (Auszug):** ## Mediterrane Hähnchen-Gemüse-Pfanne Hier ist ein leckeres, kalorienarmes Abendessen, das gut unter deinem Limit von 500 kcal liegt. **Geschätzte Nährwerte pro Portion:** ~343 kcal (Eiweiß: 31g, Kohlenhydrate: 12g, Fett: 21g). *Hinweis: Dies sind Näherungswerte ohne verifizierte Datenbank.* ### Zutaten (für 2 Portione …
 
 ### `portionen_skalierung`
 
 Harter Constraint: Personenzahl. Skalierung MUSS ueber portionen_skalieren laufen (kein Kopfrechnen); Stichprobe: 400g*3=1200, 2*3=6, 300g*3=900, 1/2 TL*3=1,5. Keine Recherche noetig (situationsabhaengige Tool-Wahl).
 
 - **Eingabe:** „Ich habe ein Rezept fuer 2 Personen: 400g Reis, 2 Zwiebeln, 300g Gemuese, 1/2 TL Salz. Rechne mir die Mengen fuer 6 Personen um.“ (Modus `einkaufsliste`)
-- **Trajektorie:** portionen_skalieren 1×, einkaufsliste_erstellen 1×
+- **Trajektorie:** portionen_skalieren 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
@@ -81,7 +81,7 @@ Harter Constraint: Personenzahl. Skalierung MUSS ueber portionen_skalieren laufe
 | `tool_nicht_aufgerufen` | ✓ bestanden | recherche_rezepte: nicht aufgerufen |
 | `erwaehnt_alle` | ✓ bestanden | alle 4 Begriffe enthalten |
 
-> **Antwort (Auszug):** **Rezept fuer 6 Personen:** - **1200g Reis** - **6 Zwiebeln** - **900g Gemuese** - **1,5 TL Salz** **Einkaufsliste (alle Zutaten fehlen):** - 1200g Reis - 6 Zwiebeln - 900g Gemuese - 1,5 TL Salz *Hinweis: Die Mengen wurden exakt fuer 6 Portionen umgerechnet. Fuer eine Naehrwert-Pruefung oder Anpassung an Kalorien-/Erna …
+> **Antwort (Auszug):** ## Reis mit Gemüse (für 6 Personen) Hier sind die umgerechneten Zutatenmengen für 6 Personen: - 1200g Reis - 6 Zwiebeln - 900g Gemüse - 1,5 TL Salz Da du im Modus "Fehlende Zutaten dürfen ergänzt und als Einkaufsliste ausgegeben werden" bist, benötige ich noch eine Information, um die Einkaufsliste zu erstellen: **Welc …
 
 ### `vegan_profil`
 
@@ -93,11 +93,11 @@ Harter Constraint aus dem Profil: vegan. In der Zutaten-/Einkaufsliste duerfen k
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `antwort_nicht_leer` | ✓ bestanden | 773 Zeichen |
-| `verbotene_zutaten` | ✓ bestanden | 19 Listenzeilen geprueft, keine verbotene Zutat |
+| `antwort_nicht_leer` | ✓ bestanden | 2123 Zeichen |
+| `verbotene_zutaten` | ✓ bestanden | 27 Listenzeilen geprueft, keine verbotene Zutat |
 | `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 1x aufgerufen |
 
-> **Antwort (Auszug):** **Rezept: Creamy Vegan One-Pot Pasta** **Zutaten**: - 100g Cashews - 200ml Gemüsebrühe - 1 EL Tomatenpaste - 1 Zwiebel - 2 Knoblauchzehen - 200g Penne-Nudeln - 1 geräucherte Paprika - Salz, Pfeffer, Olivenöl **Zubereitung**: 1. Cashews mit Brühe und Tomatenpaste pürieren. 2. Zwiebel und Knoblauch in Olivenöl anbraten,  …
+> **Antwort (Auszug):** ## Cremige Gemüsepasta mit Cashew-Sauce Hier ist ein leckeres, cremiges und veganes Pasta-Rezept für dich. Die Sauce basiert auf Cashewkernen und Hafermilch, was eine herrlich sämige Konsistenz ergibt, ohne tierische Produkte zu verwenden. **Zutaten (für 2 Personen):** * 200 g Nudeln (z. B. Penne oder Fusilli) * 100 g  …
 
 ### `glutenfrei_profil`
 
@@ -105,14 +105,14 @@ Harter Constraint aus dem Profil: glutenfrei - bei einer Nudel-Anfrage. Der Agen
 
 - **Eingabe:** „Ich moechte heute etwas mit Nudeln kochen.“ (Modus `einkaufsliste`)
 - **Profil-Fixture:** `{"ernaehrung": ["glutenfrei"], "geschmack": [], "wichtig": [], "bewertungen": {}}`
-- **Trajektorie:** recherche_rezepte 1×, einkaufsliste_erstellen 1×
+- **Trajektorie:** recherche_rezepte 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
 | `erwaehnt_eines` | ✓ bestanden | gefunden: ['glutenfrei'] |
-| `verbotene_zutaten` | ✓ bestanden | 16 Listenzeilen geprueft, keine verbotene Zutat |
+| `verbotene_zutaten` | ✓ bestanden | 12 Listenzeilen geprueft, keine verbotene Zutat |
 
-> **Antwort (Auszug):** **Glutenfreie Spaghetti mit Hackfleischsauce** **Zutaten (für 2 Portionen):** - 200g glutenfreie Nudeln - 300g Hackfleisch (z. B. Rind) - 1 Zwiebel - 2 Knoblauchzehen - 2 EL Tomatenmark - 200ml Wasser oder Brühe - Salz, Pfeffer, italienische Kräuter **Zubereitung:** 1. Nudeln nach Packungsanweisung kochen, abspülen. 2. …
+> **Antwort (Auszug):** ## Glutenfreie Nudeln (Klassisch mit Xanthan) Hier ist ein einfaches und bewährtes Rezept für selbstgemachte glutenfreie Nudeln. Da du den Modus "Einkaufsliste" gewählt hast, erstelle ich dir im nächsten Schritt eine Liste der fehlenden Zutaten. **Zutaten (für 2 Personen):** * 200 g glutenfreie Mehlmischung (z. B. aus  …
 
 ### `konflikt_salami_vegetarisch`
 
@@ -120,14 +120,14 @@ Randfall: Tageswunsch (Salami) widerspricht der harten Profil-Vorgabe (vegetaris
 
 - **Eingabe:** „Ich haette heute richtig Lust auf Pizza mit Salami.“ (Modus `einkaufsliste`)
 - **Profil-Fixture:** `{"ernaehrung": ["vegetarisch"], "geschmack": [], "wichtig": [], "bewertungen": {}}`
-- **Trajektorie:** recherche_rezepte 1×, einkaufsliste_erstellen 1×
+- **Trajektorie:** einkaufsliste_erstellen 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
 | `erwaehnt_eines` | ✓ bestanden | gefunden: ['vegetarisch'] |
-| `verbotene_zutaten` | ✓ bestanden | 18 Listenzeilen geprueft, keine verbotene Zutat |
+| `verbotene_zutaten` | ✓ bestanden | 6 Listenzeilen geprueft, keine verbotene Zutat |
 
-> **Antwort (Auszug):** Hier ist ein passendes vegetarisches Pizza-Rezept für Sie: **Vegetarische Pizza mit Tomatensauce & Gemüse** **Zutaten (für 2 Portionen):** - 1 Pizza-Teig (ca. 300g) - 200g Tomatensauce - 100g Mozzarella (gewiegen) - 1/2 Paprika (rot/gelb) - 100g Champignons - 50g Oliven (schwarz/rot) - Salz & Pfeffer nach Geschmack **Z …
+> **Antwort (Auszug):** Hier ist deine Einkaufsliste für die vegetarische Pizza: **Einkaufsliste:** * 350 g Weizenmehl * 1 Päckchen Trockenhefe * Olivenöl (für Teig und Bestreichen) * 200 g passierte Tomaten * 200 g Mozzarella * Frische Basilikumblätter Guten Appetit! Wenn du doch lieber ein Rezept mit anderen vegetarischen Belägen (z. B. Pil …
 
 ### `wochenplan_3_kcal`
 
@@ -135,18 +135,18 @@ Planungsfall: 3 Gerichte, kcal-Limit, vegetarisches Profil. Trajektorie muss die
 
 - **Eingabe:** „Plane mir 3 unterschiedliche Abendessen fuer die Woche, maximal 500 kcal pro Portion, fuer 2 Personen.“ (Modus `einkaufsliste`)
 - **Profil-Fixture:** `{"ernaehrung": ["vegetarisch"], "geschmack": [], "wichtig": [], "bewertungen": {}}`
-- **Trajektorie:** recherche_rezepte 6×, naehrwerte_schaetzen 6×, wochenplan_zusammenstellen 1×
+- **Trajektorie:** recherche_rezepte 3×, wochenplan_zusammenstellen 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 6x aufgerufen |
-| `tool_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: 6x aufgerufen |
+| `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 3x aufgerufen |
+| `tool_aufgerufen` | ✗ verletzt | naehrwerte_schaetzen: 0x aufgerufen, erwartet >= 3 |
 | `tool_aufgerufen` | ✓ bestanden | wochenplan_zusammenstellen: 1x aufgerufen |
-| `revision_geprueft` | ✓ bestanden | 3x ueber Limit, jeweils Revision sichtbar |
-| `kcal_limit` | ✗ verletzt | 3 Angabe(n) ueber Limit 500: [600.0] |
-| `schrittzahl` | ✓ bestanden | 13 Aktionen (Korridor 7-40) |
+| `revision_geprueft` | ○ neutral | kein Gericht ueber dem Limit -> keine Revision noetig |
+| `kcal_limit` | ○ neutral | keine kcal-Angabe in der Antwort gefunden |
+| `schrittzahl` | ✗ verletzt | 4 Aktionen, erwartet 7-40 |
 
-> **Antwort (Auszug):** 1. **Zucchini-Nudeln mit Tomatensoße**: Zucchini, Tomatensoße, Olivenöl, Knoblauch, Petersilie (~600 kcal/Portion). 2. **Jackfruit-Gemüsepfanne**: Jackfruit, Reisnudeln, Brokkoli, Bohnen, Pilze, Curry (~600 kcal/Portion). 3. **Borschtsch vegetarisch**: Rote Bete, Kartoffeln, Karotten, Zwiebel, Knoblauch, Gemüsebrühe, E …
+> **Antwort (Auszug):** Ich konnte leider keine passenden Rezepte fuer den Wochenplan finden.
 
 ### `wochenplan_ohne_kcal`
 
@@ -161,36 +161,36 @@ Planungsfall ohne kcal-Vorgabe: situationsabhaengiger Pfad - der Naehrwert-Check
 | `tool_nicht_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: nicht aufgerufen |
 | `tool_aufgerufen` | ✓ bestanden | wochenplan_zusammenstellen: 1x aufgerufen |
 
-> **Antwort (Auszug):** 1. Gebratener Lachs mit Dill-Sauce (ca. 500 kcal) - Lachsfilet, Dill, Butter, Kartoffeln, Zitrone Gesamt-Einkaufsliste: - Lachsfilet - Dill - Butter - Kartoffeln - Zitrone
+> **Antwort (Auszug):** Wochenplan: 1. Lachs-Sahne-Gratin aus dem Ofen Zutaten: Lachsfilets, Sahne, Zwiebeln, Petersilie, Salz, Pfeffer, Zitronensaft Hinweis: Geschätzte Kalorien (Näherung ohne verifizierte DB) 2. Meditaner Fisch mit Gemüse Zutaten: Weißes Fischfilet, Zwiebeln, Paprika, Zucchini, Weißwein, Gemüsebrühe, frisches Basilikum, Oli …
 
 ### `leere_suche_fallback`
 
 Fehlerfall: Suche nach Fantasie-Zutaten laeuft ins Leere. Erwartet: Agent erkennt den Fehlschlag und faellt TRANSPARENT auf eigenes Wissen zurueck oder sagt ehrlich, dass nichts gefunden wurde - statt Treffer zu erfinden.
 
 - **Eingabe:** „Was kann ich mit Quargelbrumsel und Fizzelkraut kochen?“ (Modus `einkaufsliste`)
-- **Trajektorie:** recherche_rezepte 1×
+- **Trajektorie:** recherche_rezepte 1×, einkaufsliste_erstellen 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `antwort_nicht_leer` | ✓ bestanden | 960 Zeichen |
+| `antwort_nicht_leer` | ✓ bestanden | 215 Zeichen |
 | `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 1x aufgerufen |
-| `erwaehnt_eines` | ✓ bestanden | gefunden: ['keine passenden'] |
+| `erwaehnt_eines` | ✗ verletzt | keiner von 9 Begriffen enthalten |
 
-> **Antwort (Auszug):** Da keine passenden Rezepte für Quargelbrumsel und Fizzelkraut gefunden wurden, schlage ich ein selbst zusammengestelltes Gericht vor, basierend auf ähnlichen Zutaten: **Quargelbrumsel-Fizzelkraut-Eintopf** *(Eigene Kreation)* **Zutaten** (für 2 Portionen): - 200g Quargelbrumsel (oder Quark als Ersatz) - 300g Fizzelkrau …
+> **Antwort (Auszug):** Hier ist deine Einkaufsliste für das **Quarkcreme mit Gurke und Dill**: - 250 g Magerquark - 1 kleine Gurke - 1 Bund frischer Dill - 100 ml Schmand oder saure Sahne - 1 Zwiebel - 1 TL Senf Viel Erfolg beim Kochen!
 
 ### `modus_vorhanden`
 
 Randfall Modus 'vorhanden': nur vorhandene Zutaten verwenden - die Einkaufslisten-Maschinerie darf nicht anspringen (situationsabhaengige Tool-Wahl).
 
 - **Eingabe:** „Ich habe nur Eier, Tomaten, Zwiebeln und Brot da. Was kann ich damit kochen?“ (Modus `vorhanden`)
-- **Trajektorie:** recherche_rezepte 1×
+- **Trajektorie:** —
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `antwort_nicht_leer` | ✓ bestanden | 760 Zeichen |
+| `antwort_nicht_leer` | ✓ bestanden | 1955 Zeichen |
 | `tool_nicht_aufgerufen` | ✓ bestanden | einkaufsliste_erstellen: nicht aufgerufen |
 
-> **Antwort (Auszug):** Ich schlage das Rezept **Tomaten-Ei-Brot mit Zwiebeln** vor, das sich mit deinen vorhandenen Zutaten (plus Grundzutaten wie Olivenöl) zubereiten lässt: **Zutaten**: - 2–3 Eier - 1–2 Tomaten (gewürfelt) - 1 Zwiebel (gehackt) - 2–3 Scheiben Brot (in Würfel gehackt) - 1 EL Olivenöl - Salz, Pfeffer **Zubereitung**: 1. Eier …
+> **Antwort (Auszug):** ## Spanische Tortilla (Omelett mit Tomaten und Zwiebeln) Da du nur Eier, Tomaten, Zwiebeln und Brot hast, ist eine klassische **Spanische Tortilla** (oder ein einfaches Omelett) die beste Wahl. Das Brot kannst du dazu als Beilage servieren oder in kleine Würfel schneiden und mitbraten, um das Omelett zu binden und zu s …
 
 ### `memory_schlecht_bewertet`
 
@@ -202,10 +202,10 @@ Memory-Fall: Kuerbissuppe wurde mit 1 Stern bewertet ('eher meiden'). Bei einer 
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `antwort_nicht_leer` | ✓ bestanden | 780 Zeichen |
-| `erwaehnt_nicht` | ✗ verletzt | unerwuenscht enthalten: ['Kuerbis'] |
+| `antwort_nicht_leer` | ✓ bestanden | 1423 Zeichen |
+| `erwaehnt_nicht` | ✗ verletzt | unerwuenscht enthalten: ['Kuerbissuppe', 'Kuerbis'] |
 
-> **Antwort (Auszug):** **Rezeptvorschlag: Süßkartoffelsuppe mit Blumenkohl** **Zutaten**: - 2–3 Süßkartoffeln - 1 Blumenkohl - 1 Zwiebel - 2 Knoblauchzehen - 2 EL Olivenöl - 1 Liter Brühe (Würzmittel oder Gemüsebrühe) - Salz, Pfeffer, eventuell Currypulver **Zubereitung**: 1. Zwiebel und Knoblauch in Olivenöl anbraten. 2. Süßkartoffeln und B …
+> **Antwort (Auszug):** ## Cremige Tomatensuppe Da dir bei Gerichten generell Schnelligkeit wichtig ist und du Kürbissuppe eher meidest, ist diese cremige Tomatensuppe eine hervorragende Wahl. Sie ist in etwa 20 Minuten zubereitet, schmeckt intensiv und ist ein klassischer Komfort-Klassiker. **Zutaten (für 2 Portionen):** * 1 Zwiebel * 2 Knob …
 
 ### `favoriten_rag`
 
@@ -221,7 +221,7 @@ Agentic RAG (W3/W4): Bezug auf Bewaehrtes ('meine gespeicherten Lieblingsrezepte
 | `tool_reihenfolge` | ✓ bestanden | rag_retriever lief, recherche_rezepte war nicht noetig |
 | `erwaehnt_eines` | ✓ bestanden | gefunden: ['Curry'] |
 
-> **Antwort (Auszug):** Hier ist dein gespeichertes Lieblingsrezept und die dazugehörige Einkaufsliste: **Rezept: Gemüse-Curry mit Kokosmilch** (5 Sterne, ~540 kcal/Portion) 1. 2 Süßkartoffeln schälen und in Würfel schneiden 2. 400ml Kokosmilch mit 2 EL roter Currypaste vermengen 3. Süßkartoffeln in der Curry-Kokos-Mischung 15-20 Minuten köch …
+> **Antwort (Auszug):** ## Gemuese-Curry mit Kokosmilch Hier ist dein gespeichertes Lieblingsrezept aus dem persönlichen Kochbuch: **Zutaten:** - 2 Süßkartoffeln - 400 ml Kokosmilch - 2 EL rote Currypaste - 200 g Reis **Zubereitung:** 1. Die Süßkartoffeln schälen und in Würfel schneiden. 2. Den Reis nach Packungsanleitung garen. 3. In einem T …
 
 ### `schwer_kombi_constraints` — *bewusst schwerer Fall*
 
@@ -231,16 +231,16 @@ SCHWERER FALL: 4 Gerichte, vegan UND glutenfrei UND max 400 kcal, 3 Personen, ab
 
 - **Eingabe:** „Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen.“ (Modus `einkaufsliste`)
 - **Profil-Fixture:** `{"ernaehrung": ["vegan", "glutenfrei"], "geschmack": [], "wichtig": [], "bewertungen": {}}`
-- **Trajektorie:** recherche_rezepte 5×, naehrwerte_schaetzen 5×, wochenplan_zusammenstellen 1×
+- **Trajektorie:** recherche_rezepte 4×, wochenplan_zusammenstellen 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 5x aufgerufen |
-| `tool_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: 5x aufgerufen |
-| `kcal_limit` | ✗ verletzt | 1 Angabe(n) ueber Limit 400: [617.0] |
-| `verbotene_zutaten` | ✓ bestanden | 21 Listenzeilen geprueft, keine verbotene Zutat |
+| `tool_aufgerufen` | ✓ bestanden | recherche_rezepte: 4x aufgerufen |
+| `tool_aufgerufen` | ✗ verletzt | naehrwerte_schaetzen: 0x aufgerufen, erwartet >= 4 |
+| `kcal_limit` | ○ neutral | keine kcal-Angabe in der Antwort gefunden |
+| `verbotene_zutaten` | ○ neutral | keine Zutaten-/Listenzeilen gefunden |
 
-> **Antwort (Auszug):** 1. **Black Bean, Tofu & Avocado Rice Bowl**: Schwarze Bohnen, Tofu, Reis, Avocado, Spinat (~617 kcal/Portion). 2. **Spinach & Sweet Potato Curry**: Süßkartoffeln, Spinat, Kokosmilch, Kurkuma (~400 kcal/Portion). 3. **Zucchini Noodles with Pesto**: Zucchini, Pinienkerne, Petersilie, Olivenöl, Zitrone (~400 kcal/Portion) …
+> **Antwort (Auszug):** Ich konnte leider keine passenden Rezepte fuer den Wochenplan finden.
 
 ### `schwer_skalierung_kette` — *bewusst schwerer Fall*
 
@@ -249,15 +249,15 @@ SCHWERER FALL: Zwei-Tool-Kette in EINER Anfrage - Rezept finden, kcal-Limit prue
 *Warum schwer:* Der Agent muss naehrwerte_schaetzen UND portionen_skalieren in einem Lauf kombinieren; Modelle neigen dazu, die Skalierung 'im Kopf' zu machen oder ganz wegzulassen.
 
 - **Eingabe:** „Such mir ein Curry-Rezept mit maximal 450 kcal pro Portion und rechne die Zutatenmengen exakt fuer 5 Personen um.“ (Modus `einkaufsliste`)
-- **Trajektorie:** recherche_rezepte 1×, naehrwerte_schaetzen 1×
+- **Trajektorie:** recherche_rezepte 1×, naehrwerte_schaetzen 2×, portionen_skalieren 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `tool_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: 1x aufgerufen |
-| `tool_aufgerufen` | ✗ verletzt | portionen_skalieren: 0x aufgerufen, erwartet >= 1 |
+| `tool_aufgerufen` | ✓ bestanden | naehrwerte_schaetzen: 2x aufgerufen |
+| `tool_aufgerufen` | ✓ bestanden | portionen_skalieren: 1x aufgerufen |
 | `kcal_limit` | ✓ bestanden | alle 2 kcal-Angaben <= 450 |
 
-> **Antwort (Auszug):** Das Rezept **Kichererbsen-Curry** wurde angepasst, um die kcal-Vorgabe (~450 kcal/Portion) zu erfüllen. Hier die Details: --- ### **Rezept: Kichererbsen-Curry (für 5 Personen)** **Zutaten (angepasst):** - 1000g Kichererbsen - 5 Tomaten - 2,5 Zwiebeln - 2,5 EL Currypulver - 100ml Kokosmilch (ursprünglich 200ml reduziert …
+> **Antwort (Auszug):** ## Cremiges Low Carb Tomaten-Kokos-Curry mit Hähnchen (angepasst) Dieses Rezept liegt mit geschätzten **~392 kcal pro Portion** unter deinem Limit von 450 kcal. Die Werte sind Näherungen ohne verifizierte Datenbank. ### Zutaten für 5 Personen: - 1250g Hähnchenbrustfilet - 2,5 Zwiebeln - 5 Knoblauchzehen - 1000g passier …
 
 ### `schwer_kcal_tagessumme` — *bewusst schwerer Fall*
 
@@ -266,12 +266,12 @@ SCHWERER FALL: Tages-SUMMEN-Constraint (3 Mahlzeiten zusammen max 1200 kcal) sta
 *Warum schwer:* erkenne_wochenplan extrahiert 'kcal_limit pro Portion'; ein Summen-Budget ueber mehrere Mahlzeiten kann es nicht ausdruecken. Erwartung: das Limit wird als 1200/Portion fehlinterpretiert oder ignoriert.
 
 - **Eingabe:** „Plane mir 3 Mahlzeiten fuer einen Tag (Fruehstueck, Mittag, Abend), die zusammen hoechstens 1200 kcal pro Person haben. Fuer 2 Personen.“ (Modus `einkaufsliste`)
-- **Trajektorie:** recherche_rezepte 3×
+- **Trajektorie:** recherche_rezepte 3×, naehrwerte_schaetzen 2×, wochenplan_zusammenstellen 1×
 
 | Check | Status | Detail |
 |-------|--------|--------|
-| `tool_aufgerufen` | ✗ verletzt | naehrwerte_schaetzen: 0x aufgerufen, erwartet >= 3 |
-| `kcal_summe_limit` | ✗ verletzt | einzelner Wert ueber dem Gesamtbudget 1200 |
+| `tool_aufgerufen` | ✗ verletzt | naehrwerte_schaetzen: 2x aufgerufen, erwartet >= 3 |
+| `kcal_summe_limit` | ✓ bestanden | Summe 512 <= 1200 |
 
-> **Antwort (Auszug):** **Vorgeschlagene Mahlzeiten für 2 Personen (max. 1200 kcal gesamt):** --- ### **1. Frühstück: Chia-Pancakes** **Zutaten**: - 100g Chia-Samen - 200ml Milch (Hafer- oder Soja-Milch für Laktose-Allergiker) - 2 Eier - 100g Mehl (glutenfrei, falls erforderlich) - 1 TL Backpulver - 1 EL Honig - 1 Prise Salz **Zubereitung**:  …
+> **Antwort (Auszug):** **Wochenplan** 1. **Beeren-Quinoa-Joghurt-Bowl** *Zutaten:* 200 g Magerquark oder Griechischer Joghurt (0–2 % Fett), 50 g Quinoa (gekocht) oder Haferflocken, 100 g Beeren (frisch oder tiefgekühlt, z. B. Himbeeren, Blaubeeren), 1 EL Chiasamen oder Leinsamen, Optional: etwas Zitrone oder Honig zum Süßen. *Kalorien:* ~172 …
 

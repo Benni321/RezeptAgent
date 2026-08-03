@@ -17,18 +17,41 @@ vegetarisch" ein Kürbis-Spinat-Curry mit ~325 kcal
 trifft auf Saisonrezepte-Seiten mit Aufläufen und Eintöpfen — tendenziell
 kalorienreicher, also mehr Revisionen und mehr „trotz Revision über Limit"-Fälle.
 **Woran wir es merken:** Der Eval-Report ist reproduzierbar erzeugbar
-(`python evals/run_eval.py`, aktuell **39/45 Checks = 87 %**,
-[eval_report.md](evidence/eval_report.md)). Kippen bei einem Wiederholungslauf
-mit identischem Testset die `kcal_limit`- und `revision_geprueft`-Checks, hat
-sich die Quellenwelt verschoben, nicht unser Code. Genau dafür müsste die Eval
+(`python evals/run_eval.py`, aktuell **35/41 wertbare Checks = 85 %**, Stand
+2026-08-03, [eval_report.md](evidence/eval_report.md)). Kippen bei einem Wiederholungslauf
+mit identischem Testset **und unverändertem Modell** die `kcal_limit`- und
+`revision_geprueft`-Checks, hat sich die Quellenwelt verschoben, nicht unser
+Code (dass auch ein Modellwechsel Checks kippt, zeigt der Re-Run in Punkt 2 —
+die beiden Ursachen muss man beim Lesen der Quote auseinanderhalten). Genau dafür müsste die Eval
 periodisch laufen (heute: manuell) — das ist die ehrliche Lücke: Wir *können*
 Drift messen, aber nichts *stößt* die Messung an.
 
-**2. Modell-Drift: bei uns keine Theorie, sondern zweimal passiert.** Erst
+**2. Modell-Drift: bei uns keine Theorie, sondern dreimal passiert.** Erst
 erzeugte `llama-3.3-70b` auf Groq ein defektes Tool-Call-Format
 (`tool_use_failed` — jede Recherche scheiterte), dann wurden die alten
-Llama-Vision-Modelle deprecatet; beides erzwang Modellwechsel (heute
-`qwen/qwen3-32b` bzw. `llama-4-scout`). Die unbequeme Annahme dahinter: Unser
+Llama-Vision-Modelle deprecatet — und im Juli 2026 zog Groq auch das danach
+genutzte `qwen/qwen3-32b` samt `llama-4-scout` (Vision) zurück. Der dritte
+erzwungene Wechsel (auf `qwen/qwen3.6-27b` als EIN multimodales Modell für Text
+und Vision — nur noch eine Deprecation-Quelle statt zwei) traf exakt das hier
+vorhergesagte Muster: Eval-Report und Evidence waren auf das zurückgezogene
+Modell geeicht und mussten gegen das unveränderte Testset neu gefahren werden.
+Der Re-Run bezifferte den Effekt: **87 % → 80 %**, und das *Fehlerbild* verschob
+sich — der alte Regel-6-Verstoß (Skalierung „im Kopf") verschwand, dafür ließ
+das neue Modell in `leere_suche_fallback` die Websuche ganz aus, die
+LLM-gestützte Wochenplan-Erkennung verfehlte 2 von 3 Plan-Eingaben, und der
+Recherche-Sub-Agent lief mehrfach in seinen Schritt-Deckel (`recursion_limit=6`
+→ „Sorry, need more steps"). Ein Modellwechsel verschiebt also nicht nur
+Qualität, sondern *wo* es bricht. **Nachtrag 2026-08-03 — Drift gemessen,
+mitigiert, neu gemessen:** Gezielte Anpassungen an den Nachfolger
+(`recursion_limit` 6→10, Beispiele in der Wochenplan-Erkennung,
+Recherche-Pflicht auch bei Fantasie-Zutaten) hoben die Quote von 80 % auf
+**85 %** zurück; die Wochenplan-Erkennung greift wieder. Restgrenze, ehrlich:
+Bei überspezifizierten Mehrfach-Constraint-Anfragen (kcal + Ernährung +
+Abwechslung in einem Suchauftrag) erschöpft der Sub-Agent weiterhin seine
+Schritte; eine dagegen ergänzte Such-Deckelung im Sub-Agent-Prompt ist
+eingebaut, ihre Wirkung konnte am selben Tag wegen des Tages-Token-Limits
+nicht mehr gemessen werden (Re-Run der drei betroffenen Fälle ausstehend).
+Die unbequeme Annahme dahinter: Unser
 System ist über `GROQ_MODEL` scheinbar modellagnostisch, tatsächlich aber auf
 **ein Modellverhalten kalibriert** — der `<think>`-Filter in
 [text_utils.py](../app/core/text_utils.py) existiert nur wegen qwen3, die

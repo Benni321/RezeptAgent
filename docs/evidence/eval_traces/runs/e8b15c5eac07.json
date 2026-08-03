@@ -1,20 +1,11 @@
 {
-  "id": "schwer_skalierung_kette",
-  "beschreibung": "SCHWERER FALL: Zwei-Tool-Kette in EINER Anfrage - Rezept finden, kcal-Limit pruefen UND exakt auf 5 Personen skalieren. Erfahrungsgemaess laesst der Agent einen der beiden Constraint-Schritte aus.",
-  "erwartet_schwer": true,
-  "warum_schwer": "Der Agent muss naehrwerte_schaetzen UND portionen_skalieren in einem Lauf kombinieren; Modelle neigen dazu, die Skalierung 'im Kopf' zu machen oder ganz wegzulassen.",
-  "eingabe": {
-    "nachricht": "Such mir ein Curry-Rezept mit maximal 450 kcal pro Portion und rechne die Zutatenmengen exakt fuer 5 Personen um.",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "e8b15c5eac07",
+  "zeit_start": "2026-08-02T14:49:22",
+  "dauer_ms": 158848,
+  "eingabe": "Such mir ein Curry-Rezept mit maximal 450 kcal pro Portion und rechne die Zutatenmengen exakt fuer 5 Personen um.",
+  "modus": "einkaufsliste",
   "antwort": "## Cremiges Low Carb Tomaten-Kokos-Curry mit Hähnchen (angepasst)\n\nDieses Rezept liegt mit geschätzten **~392 kcal pro Portion** unter deinem Limit von 450 kcal. Die Werte sind Näherungen ohne verifizierte Datenbank.\n\n### Zutaten für 5 Personen:\n- 1250g Hähnchenbrustfilet\n- 2,5 Zwiebeln\n- 5 Knoblauchzehen\n- 1000g passierte Tomaten (z. B. 2 Dosen à 500g)\n- 250ml Kokosmilch light\n- 2,5 TL Paprikapulver\n- 2,5 TL Rapsöl\n- Salz, Pfeffer, Currypulver nach Geschmack\n\n### Zubereitung:\n1. Hähnchenbrustfilet in mundgerechte Stücke schneiden.\n2. Zwiebeln und Knoblauch fein würfeln.\n3. Rapsöl in einem großen Topf oder einer Pfanne erhitzen und das Hähnchen goldbraun anbraten. Herausnehmen.\n4. Zwiebeln und Knoblauch im selben Topf glasig dünsten.\n5. Mit passierten Tomaten, Kokosmilch light, Paprikapulver und Currypulver ablöschen.\n6. Das Hähnchen wieder hinzugeben und alles bei mittlerer Hitze ca. 10–15 Minuten köcheln lassen, bis das Hähnchen durchgegart ist.\n7. Mit Salz und Pfeffer abschmecken.\n\n---\n\nDa du den Modus \"Fehlende Zutaten dürfen ergänzt und als Einkaufsliste ausgegeben werden\" gewählt hast, erstelle ich nun eine Einkaufsliste. Bitte gib mir kurz Bescheid, welche Zutaten du **bereits zu Hause hast**, damit ich die Liste genau auf das beschränken kann, was du noch kaufen musst.\n\n*(Wenn du keine Zutaten zu Hause hast, kann ich auch eine Vollliste erstellen.)*",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -112,24 +103,5 @@
       "dauer_ms": 1,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "naehrwerte_schaetzen: 2x aufgerufen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "portionen_skalieren: 1x aufgerufen"
-    },
-    {
-      "typ": "kcal_limit",
-      "status": "bestanden",
-      "detail": "alle 2 kcal-Angaben <= 450"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 158.9
+  ]
 }

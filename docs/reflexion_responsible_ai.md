@@ -26,12 +26,18 @@ Check nach der Rezeptwahl** (dasselbe Muster wie unser kcal-Check im
 Wochenplan-Workflow: prüfen im Code, nicht im Prompt).
 
 **2. Gesundheitsbezogene Zahlen aus einer LLM-Schätzung.** `naehrwerte_schaetzen`
-liefert Näherungen ohne Datenbank. Der Eval zeigt die Fehlbarkeit mit Zahlen:
-Im Fall `schwer_kombi_constraints` blieb trotz Revision ein Gericht bei
-**~617 kcal statt der geforderten ≤ 400**; im Fall `schwer_kcal_tagessumme`
-wurde ein Tages-Summen-Budget (1200 kcal für drei Mahlzeiten) als
-Pro-Portion-Limit fehlinterpretiert und `naehrwerte_schaetzen` lief gar nicht
-(0× statt ≥ 3×). Für Komfort-Nutzer ist das ein Schönheitsfehler; für jemanden,
+liefert Näherungen ohne Datenbank. Der Eval zeigt die Fehlbarkeit mit Zahlen
+(Lauf 2026-07-15, `qwen3-32b`): Im Fall `schwer_kombi_constraints` blieb trotz
+Revision ein Gericht bei **~617 kcal statt der geforderten ≤ 400**; im Fall
+`schwer_kcal_tagessumme` wurde ein Tages-Summen-Budget (1200 kcal für drei
+Mahlzeiten) als Pro-Portion-Limit fehlinterpretiert und `naehrwerte_schaetzen`
+lief gar nicht (0× statt ≥ 3×). Der Re-Run nach dem erzwungenen Modellwechsel
+(2026-08-02, `qwen3.6-27b`) verschob das Bild, ohne es zu verbessern: Dieselbe
+Kombi-Anfrage lieferte eine Antwort ganz **ohne** kcal-Zahlen (Checks nur noch
+„neutral" — das in [evals/README](../evals/README.md) beschriebene
+Reward-Hacking-Schlupfloch, real eingetreten), und die Summen-Anfrage wurde gar
+nicht erst als Mehr-Mahlzeiten-Plan erkannt. Für Komfort-Nutzer ist das ein
+Schönheitsfehler; für jemanden,
 der aus medizinischen Gründen zählt (Diabetes, Adipositas-Therapie), wäre
 dieselbe Ausgabe schädlich. Wir kennzeichnen die Werte konsequent als
 Schätzungen — aber wir wissen aus dem eigenen Eval, dass Nutzer im Grenzfall

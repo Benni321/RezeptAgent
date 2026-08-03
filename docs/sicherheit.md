@@ -36,8 +36,8 @@ Für jedes Tool/jeden Agenten: *Was kann es — und was braucht es wirklich?*
 
 | Komponente | Kann | Braucht es → Bewertung |
 |------------|------|------------------------|
-| Orchestrator ([orchestrator.py:120](../app/agents/orchestrator.py#L120)) | die 5 Rezept-Tools aufrufen | ✅ minimal — **kein** Code-Execution-, Datei-, Shell- oder HTTP-Tool |
-| Recherche-Sub-Agent ([recherche_agent.py:72](../app/agents/recherche_agent.py#L72)) | nur `web_search` | ✅ minimal — genau ein Tool, plus Schritt-Deckel (s. u.) |
+| Orchestrator ([orchestrator.py:159](../app/agents/orchestrator.py#L159)) | die 5 Rezept-Tools aufrufen | ✅ minimal — **kein** Code-Execution-, Datei-, Shell- oder HTTP-Tool |
+| Recherche-Sub-Agent ([recherche_agent.py:79](../app/agents/recherche_agent.py#L79)) | nur `web_search` | ✅ minimal — genau ein Tool, plus Schritt-Deckel (s. u.) |
 | `web_search` | Tavily-Rezeptsuche | ✅ nur Suche, gibt nur Text zurück, ruft kein weiteres Tool |
 | `naehrwerte_schaetzen` | LLM-Schätzung | ✅ nur LLM-Call, kein I/O |
 | `einkaufsliste_erstellen`, `portionen_skalieren`, `wochenplan_zusammenstellen` | reine Logik/Arithmetik | ✅ kein I/O, kein Netz |
@@ -57,10 +57,12 @@ Code-Execution-Tool, also entfällt diese Angriffsfläche vollständig.)
 2. **Untrusted-Delimiter für Web-Inhalte:** `web_search` rahmt alle Treffer in
    `DATEN_START … DATEN_ENDE` ([web_search.py:57](../app/tools/web_search.py#L57));
    der Sub-Agent-Prompt weist an, deren Inhalt NUR als Daten zu lesen und darin
-   enthaltene Befehle zu ignorieren ([recherche_agent.py:51](../app/agents/recherche_agent.py#L51)).
+   enthaltene Befehle zu ignorieren ([recherche_agent.py:59](../app/agents/recherche_agent.py#L59)).
 3. **Excessive-Agency-Begrenzung:** Sub-Agent nur mit `web_search` +
-   `recursion_limit=6` ([recherche_agent.py:95](../app/agents/recherche_agent.py#L95));
-   Orchestrator mit `recursion_limit=15` ([agent_service.py:198](../app/core/agent_service.py#L198)).
+   `recursion_limit=10` ([recherche_agent.py:103](../app/agents/recherche_agent.py#L103);
+   von 6 erhöht, weil `qwen3.6-27b` mehr Zyklen pro Suche braucht — der Deckel
+   selbst bleibt);
+   Orchestrator mit `recursion_limit=15` ([agent_service.py:203](../app/core/agent_service.py#L203)).
    Kein unbegrenztes Tool-Feuern, auch nicht bei entgleister/injizierter Anfrage.
 4. **Observability als Sicherheitsmaßnahme (VL03):** Jede Such-Query wird geloggt
    ([web_search.py:73](../app/tools/web_search.py#L73)), alle Tool-Aufrufe strukturiert

@@ -1,6 +1,6 @@
-"""Tests fuer die Reasoning-Bereinigung (Reasoning-Modelle wie qwen geben <think> aus)."""
+"""Tests fuer die Text-Helfer: Reasoning-Bereinigung + Rezept-Titel-Extraktion."""
 
-from app.core.text_utils import entferne_reasoning
+from app.core.text_utils import entferne_reasoning, extrahiere_rezept_titel
 
 
 def test_entfernt_think_block():
@@ -22,3 +22,60 @@ def test_ohne_think_unveraendert():
 
 def test_leer():
     assert entferne_reasoning("") == ""
+
+
+# --- extrahiere_rezept_titel -----------------------------------------------------
+# Die Faelle entsprechen realen Antwort-Formaten aus docs/evidence/eval_traces/.
+
+def test_titel_aus_ueberschrift():
+    antwort = "## Zitronenhaehnchen mit Knoblauch\n**Zutaten:** ..."
+    assert extrahiere_rezept_titel(antwort) == "Zitronenhaehnchen mit Knoblauch"
+
+
+def test_titel_aus_fett_mit_label():
+    antwort = "**Vorgeschlagenes Rezept: Gebackener Lachs mit Spargel**\n**Kalorien:** ~480 kcal"
+    assert extrahiere_rezept_titel(antwort) == "Gebackener Lachs mit Spargel"
+
+
+def test_titel_aus_fett_in_prosa():
+    antwort = "Ich schlage das **Tomaten-Mozzarella-Salat**-Rezept vor – ein klassisches Gericht."
+    assert extrahiere_rezept_titel(antwort) == "Tomaten-Mozzarella-Salat"
+
+
+def test_titel_aus_klartext_label():
+    assert extrahiere_rezept_titel("Rezept: Shakshuka\nZutaten: Eier, Tomaten") == "Shakshuka"
+
+
+def test_abschnitts_labels_sind_kein_titel():
+    antwort = "**Zutaten (fuer 2 Portionen):**\n- 400g Tomaten\n**Zubereitung:** schneiden"
+    assert extrahiere_rezept_titel(antwort) is None
+
+
+def test_fehlertext_ohne_titel_gibt_none():
+    # Genau der Fall, der frueher als Rezeptname in der GUI landete.
+    antwort = ("Da die Rezeptrecherche fehlgeschlagen ist, schlage ich ein "
+               "einfaches Rezept vor, das den Vorgaben entspricht.")
+    assert extrahiere_rezept_titel(antwort) is None
+
+
+def test_fallback_rezept_nach_fehlertext_wird_gefunden():
+    # Fallback auf eigenes Wissen: der Titel steht NACH dem Erklaersatz.
+    antwort = ("Da die Websuche leer war, schlage ich aus eigenem Wissen vor:\n"
+               "## Spaghetti Aglio e Olio\n**Zutaten:** Spaghetti, Knoblauch, Oel")
+    assert extrahiere_rezept_titel(antwort) == "Spaghetti Aglio e Olio"
+
+
+def test_ueberschrift_schlaegt_fett_wort_im_vorspann():
+    # Realer GUI-Lauf 2026-08-02: Im Fallback-Vorspann stand "**ausschliesslich**"
+    # VOR der Ueberschrift und wurde faelschlich zum Rezeptnamen. Die
+    # Ueberschrift muss gewinnen, egal wo sie in den gescannten Zeilen steht.
+    antwort = ("Die Websuche hat kein nutzbares Rezept geliefert. Ich schlage ein "
+               "Rezept vor, das **ausschliesslich** die vorhandenen Zutaten nutzt.\n"
+               "## Scharfes Haehnchen-Pfannengericht mit Reis und Gemuese\n"
+               "**Zutaten (fuer 2 Personen):** ...")
+    assert (extrahiere_rezept_titel(antwort)
+            == "Scharfes Haehnchen-Pfannengericht mit Reis und Gemuese")
+
+
+def test_titel_leer_gibt_none():
+    assert extrahiere_rezept_titel("") is None

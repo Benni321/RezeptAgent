@@ -66,10 +66,13 @@ isoliertem Kontext sucht und nur eine kompakte Rezeptliste zurückgibt
 wegen nativer ReAct-Unterstützung, einfacher Tool-Integration und guter
 Erweiterbarkeit für Multi-Agent-Setups.
 
-**Modell:** Groq `qwen/qwen3-32b` — kostenlos, schnell und mit **zuverlässigem
+**Modell:** Groq `qwen/qwen3.6-27b` (Text **und** Vision — ein multimodales
+Modell, eine Deprecation-Quelle) — kostenlos, schnell und mit **zuverlässigem
 Tool-Calling**; erarbeitet nach realen Fehlversuchen mit `llama-3.3-70b`
 (defektes Tool-Call-Format auf Groq) und `gpt-oss-120b` (zu langsam für den
-Wochenplan). Umstellbar über `GROQ_MODEL`. Details:
+Wochenplan). Das zuvor genutzte `qwen/qwen3-32b` hat Groq im Juli 2026
+zurückgezogen (Modell-Drift, siehe [reflexion_drift](docs/reflexion_drift.md)).
+Umstellbar über `GROQ_MODEL`. Details:
 [PROJEKTDOKU § 2.2](docs/PROJEKTDOKU.md#22-orchestrator-langgraph-react--framework--und-modellwahl).
 
 ## Designentscheidungen — wo sie stehen
@@ -86,7 +89,7 @@ Grenzen dokumentiert — zentral in der
 | Memory | Lesen = Kontext, Schreiben = deterministische API-Aktion | [§ 2.7](docs/PROJEKTDOKU.md#27-memory-profil--bewertungen--kontext-statt-tool) |
 | Sicherheit (VL03) | minimale Angriffsfläche statt Prompt-Vertrauen | [docs/sicherheit.md](docs/sicherheit.md) |
 | Observability | trace_id + Spans, OTel-angelehnt | [§ 2.9](docs/PROJEKTDOKU.md#29-observability-traces--spans-statt-loser-log-zeilen-w5-vl09) |
-| Evaluation (VL09) | 15 Fälle, ternärer Verifier, realer Lauf 39/45 (87 %) | [docs/evidence/eval_report.md](docs/evidence/eval_report.md), [evals/README.md](evals/README.md) |
+| Evaluation (VL09) | 15 Fälle, ternärer Verifier, realer Lauf 35/41 = 85 % (4 neutral; Stand 2026-08-03) | [docs/evidence/eval_report.md](docs/evidence/eval_report.md), [evals/README.md](evals/README.md) |
 | Grenzen des Systems | Nährwerte ≈ Schätzung, Heuristik-Matching, Injection nur mitigiert, … | [§ 5](docs/PROJEKTDOKU.md#5-grenzen-des-systems) |
 
 ## Setup
@@ -141,9 +144,9 @@ pytest -q                # läuft komplett ohne API-Keys (LLM/HTTP gemockt)
 ```
 Du: Was kann ich mit Hähnchen, Zitrone und Knoblauch kochen?
 
-[THOUGHT] Ich brauche das Tool: web_search
-[ACTION]  Aufruf mit: {'query': 'Hähnchen Zitrone Knoblauch Rezept'}
-[OBSERVATION] Tool 'web_search' geantwortet: ...
+[THOUGHT] Zyklus 1: Ich brauche Sub-Agent: recherche_rezepte
+[ACTION]  Aufruf mit: {'anfrage': 'Rezepte mit Hähnchen, Zitrone und Knoblauch'}
+[OBSERVATION] Sub-Agent 'recherche_rezepte' antwortete: ...
 
 [ANSWER]  Hier ist ein passendes Rezept: Zitronenhähnchen mit Knoblauch ...
 ```

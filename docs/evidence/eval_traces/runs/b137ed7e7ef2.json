@@ -1,20 +1,11 @@
 {
-  "id": "kcal_limit_einzelrezept",
-  "beschreibung": "Harter Constraint: kcal-Vorgabe beim Einzelrezept. Der Agent MUSS naehrwerte_schaetzen aufrufen (nicht selbst schaetzen), genannte kcal muessen <= Limit sein.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Schlag mir ein Abendessen mit maximal 500 kcal pro Portion vor.",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "b137ed7e7ef2",
+  "zeit_start": "2026-08-02T14:33:15",
+  "dauer_ms": 177396,
+  "eingabe": "Schlag mir ein Abendessen mit maximal 500 kcal pro Portion vor.",
+  "modus": "einkaufsliste",
   "antwort": "## Mediterrane Hähnchen-Gemüse-Pfanne\n\nHier ist ein leckeres, kalorienarmes Abendessen, das gut unter deinem Limit von 500 kcal liegt.\n\n**Geschätzte Nährwerte pro Portion:** ~343 kcal (Eiweiß: 31g, Kohlenhydrate: 12g, Fett: 21g).\n*Hinweis: Dies sind Näherungswerte ohne verifizierte Datenbank.*\n\n### Zutaten (für 2 Portionen)\n*   2 Hähnchenbrustfilets (ca. 300g)\n*   1 Zucchini\n*   200g Champignons\n*   100g Kirschtomaten\n*   1 rote Zwiebel\n*   2 Knoblauchzehen\n*   2 EL Olivenöl\n*   1 EL frischer Thymian\n*   1 EL frischer Rosmarin\n*   20g Parmesan\n\n### Zubereitung\n1.  Die Hähnchenbrustfilets in Streifen schneiden.\n2.  Das Olivenöl in einer Pfanne erhitzen und das Hähnchen goldbraun anbraten.\n3.  Die Zucchini in Scheiben oder Würfel schneiden, die Champignons vierteln, die Zwiebel und den Knoblauch fein hacken.\n4.  Das Gemüse (Zucchini, Champignons, Zwiebeln, Knoblauch) zur Pfanne geben und mitbraten.\n5.  Mit Thymian, Rosmarin, Salz und Pfeffer würzen.\n6.  Die Kirschtomaten (halbiert oder ganz) kurz mitgaren, bis sie leicht weich sind.\n7.  Den Parmesan reiben und über das Gericht streuen.\n\n### Einkaufsliste\nDa du keine vorhandenen Zutaten genannt hast, hier die komplette Liste für den Einkauf:\n*   2 Hähnchenbrustfilets (ca. 300g)\n*   1 Zucchini\n*   200g Champignons\n*   100g Kirschtomaten\n*   1 rote Zwiebel\n*   2 Knoblauchzehen\n*   2 EL Olivenöl\n*   1 EL frischer Thymian\n*   1 EL frischer Rosmarin\n*   20g Parmesan",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -104,24 +95,5 @@
       "dauer_ms": 2,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "antwort_nicht_leer",
-      "status": "bestanden",
-      "detail": "1431 Zeichen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "naehrwerte_schaetzen: 1x aufgerufen"
-    },
-    {
-      "typ": "kcal_limit",
-      "status": "bestanden",
-      "detail": "alle 2 kcal-Angaben <= 500"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 177.4
+  ]
 }

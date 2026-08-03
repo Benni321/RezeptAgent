@@ -1,27 +1,11 @@
 {
-  "id": "konflikt_salami_vegetarisch",
-  "beschreibung": "Randfall: Tageswunsch (Salami) widerspricht der harten Profil-Vorgabe (vegetarisch). Der Agent muss den Konflikt ansprechen; Salami darf nicht in der Zutatenliste landen.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Ich haette heute richtig Lust auf Pizza mit Salami.",
-    "modus": "einkaufsliste"
-  },
-  "profil": {
-    "ernaehrung": [
-      "vegetarisch"
-    ],
-    "geschmack": [],
-    "wichtig": [],
-    "bewertungen": {}
-  },
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "402aae6225d7",
+  "zeit_start": "2026-08-02T14:37:37",
+  "dauer_ms": 37801,
+  "eingabe": "Ich haette heute richtig Lust auf Pizza mit Salami.",
+  "modus": "einkaufsliste",
   "antwort": "Hier ist deine Einkaufsliste für die vegetarische Pizza:\n\n**Einkaufsliste:**\n*   350 g Weizenmehl\n*   1 Päckchen Trockenhefe\n*   Olivenöl (für Teig und Bestreichen)\n*   200 g passierte Tomaten\n*   200 g Mozzarella\n*   Frische Basilikumblätter\n\nGuten Appetit! Wenn du doch lieber ein Rezept mit anderen vegetarischen Belägen (z. B. Pilze, Paprika, Zucchini) möchtest, sag einfach Bescheid.",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Tool",
@@ -53,19 +37,5 @@
       "dauer_ms": 1,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "erwaehnt_eines",
-      "status": "bestanden",
-      "detail": "gefunden: ['vegetarisch']"
-    },
-    {
-      "typ": "verbotene_zutaten",
-      "status": "bestanden",
-      "detail": "6 Listenzeilen geprueft, keine verbotene Zutat"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 37.8
+  ]
 }

@@ -77,8 +77,10 @@ def _baue_eingabe(nachricht: str, modus: str, harte_vorgaben: list[str], anmerku
     if modus == "vorhanden":
         teile.append(
             "Modus: nur die vorhandenen Zutaten verwenden (plus Grundzutaten wie Salz, "
-            "Pfeffer, Oel, Wasser). Schlage KEIN Rezept mit zusaetzlichen, fehlenden "
-            "Zutaten vor; passe Rezepte notfalls an oder sage ehrlich, wenn nichts passt."
+            "Pfeffer, Oel, Wasser). Die Zutaten sind ein Vorrat zur Auswahl - das Rezept "
+            "muss NICHT alle davon verwenden, uebrige bleiben uebrig. Schlage KEIN Rezept "
+            "mit zusaetzlichen, fehlenden Zutaten vor; passe Rezepte notfalls an oder sage "
+            "ehrlich, wenn nichts passt."
         )
     elif modus == "einkaufsliste":
         teile.append("Modus: Fehlende Zutaten duerfen ergaenzt und als Einkaufsliste ausgegeben werden.")

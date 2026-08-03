@@ -1,32 +1,9 @@
 {
-  "id": "modus_vorhanden",
-  "beschreibung": "Randfall Modus 'vorhanden': nur vorhandene Zutaten verwenden - die Einkaufslisten-Maschinerie darf nicht anspringen (situationsabhaengige Tool-Wahl).",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Ich habe nur Eier, Tomaten, Zwiebeln und Brot da. Was kann ich damit kochen?",
-    "modus": "vorhanden"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "ae6a0c2c46b3",
+  "zeit_start": "2026-08-02T14:40:38",
+  "dauer_ms": 1699,
+  "eingabe": "Ich habe nur Eier, Tomaten, Zwiebeln und Brot da. Was kann ich damit kochen?",
+  "modus": "vorhanden",
   "antwort": "## Spanische Tortilla (Omelett mit Tomaten und Zwiebeln)\n\nDa du nur Eier, Tomaten, Zwiebeln und Brot hast, ist eine klassische **Spanische Tortilla** (oder ein einfaches Omelett) die beste Wahl. Das Brot kannst du dazu als Beilage servieren oder in kleine Würfel schneiden und mitbraten, um das Omelett zu binden und zu sättigen (ähnlich wie bei einem Frittata mit Panzanella-Elementen).\n\nHier ist das Rezept, das **ausschließlich** deine vorhandenen Zutaten nutzt:\n\n**Zutaten:**\n*   3–4 Eier\n*   1 große Zwiebel (fein gewürfelt)\n*   2–3 reife Tomaten (gewürfelt)\n*   1–2 Scheiben Brot (optional: in kleine Würfel geschnitten, um das Omelett voluminöser zu machen)\n*   Öl (zum Braten)\n*   Salz und Pfeffer\n\n**Zubereitung:**\n1.  **Vorbereitung:** Die Zwiebeln schälen und fein würfeln. Die Tomaten waschen, entkernen (optional) und würfeln. Das Brot in kleine Würfel schneiden (falls du es verwenden möchtest).\n2.  **Anbraten:** In einer Pfanne etwas Öl erhitzen. Die Zwiebeln darin glasig dünsten. Wenn du das Brot verwendest, füge es nun hinzu und brate es kurz mit, bis es leicht knusprig ist.\n3.  **Tomaten hinzufügen:** Die Tomatenwürfel zur Pfanne geben und bei mittlerer Hitze ca. 5–8 Minuten köcheln lassen, bis sie weich sind und ein wenig eingedickt sind. Mit Salz und Pfeffer abschmecken.\n4.  **Eier zubereiten:** In einer Schüssel die Eier verquirlen und mit etwas Salz und Pfeffer würzen.\n5.  **Verbinden:** Die Eimasse über die Tomaten-Zwiebel-Mischung in der Pfanne gießen. Bei niedriger Hitze stocken lassen, bis die Unterseite fest ist.\n6.  **Wenden (optional):** Wenn du eine Tortilla-Form magst, kannst du das Omelett vorsichtig wenden und die andere Seite kurz garen. Alternativ lässt du es einfach von unten stocken und servierst es als flaches Omelett.\n7.  **Servieren:** Das Omelett auf Teller geben. Die restlichen Brotscheiben kannst du einfach dazu essen oder ebenfalls in der Pfanne mit etwas Öl knusprig toasten.\n\nGuten Appetit!",
-  "trace": [],
-  "checks": [
-    {
-      "typ": "antwort_nicht_leer",
-      "status": "bestanden",
-      "detail": "1955 Zeichen"
-    },
-    {
-      "typ": "tool_nicht_aufgerufen",
-      "status": "bestanden",
-      "detail": "einkaufsliste_erstellen: nicht aufgerufen"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 1.7
+  "schritte": []
 }

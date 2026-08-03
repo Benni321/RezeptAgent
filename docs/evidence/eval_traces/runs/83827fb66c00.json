@@ -1,29 +1,11 @@
 {
-  "id": "memory_schlecht_bewertet",
-  "beschreibung": "Memory-Fall: Kuerbissuppe wurde mit 1 Stern bewertet ('eher meiden'). Bei einer Suppen-Anfrage darf der Agent nicht ausgerechnet Kuerbissuppe vorschlagen.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Schlag mir eine Suppe fuer heute Abend vor.",
-    "modus": "einkaufsliste"
-  },
-  "profil": {
-    "ernaehrung": [],
-    "geschmack": [],
-    "wichtig": [
-      "schnell"
-    ],
-    "bewertungen": {
-      "Kuerbissuppe": 1
-    }
-  },
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-03",
-  "fehler": null,
   "trace_id": "83827fb66c00",
+  "zeit_start": "2026-08-03T09:31:16",
+  "dauer_ms": 108303,
+  "eingabe": "Schlag mir eine Suppe fuer heute Abend vor.",
+  "modus": "einkaufsliste",
   "antwort": "## Cremige Tomatensuppe\n\nDa dir bei Gerichten generell Schnelligkeit wichtig ist und du Kürbissuppe eher meidest, ist diese cremige Tomatensuppe eine hervorragende Wahl. Sie ist in etwa 20 Minuten zubereitet, schmeckt intensiv und ist ein klassischer Komfort-Klassiker.\n\n**Zutaten (für 2 Portionen):**\n*   1 Zwiebel\n*   2 Knoblauchzehen\n*   1 EL Tomatenmark\n*   400 g Dosentomaten (oder 500g frische Tomaten)\n*   500 ml Gemüsebrühe\n*   100 ml Sahne (oder Schlagsahne)\n*   Salz, Pfeffer, Prise Zucker\n*   Öl zum Anbraten\n\n**Zubereitung:**\n1.  Die Zwiebel schälen und fein würfeln, den Knoblauch schälen und pressen oder fein hacken.\n2.  In einem Topf etwas Öl erhitzen und die Zwiebeln sowie den Knoblauch kurz glasig anschwitzen.\n3.  Das Tomatenmark hinzugeben und kurz mitrösten (das intensiviert den Geschmack).\n4.  Mit den Dosentomaten (zerdrückt) und der Gemüsebrühe ablöschen.\n5.  Alles aufkochen lassen und dann ca. 10–15 Minuten köcheln lassen, damit die Aromen sich verbinden.\n6.  Mit dem Stabmixer zu einer glatten Suppe pürieren.\n7.  Die Sahne unterrühren und die Suppe mit Salz, Pfeffer und einer Prise Zucker abschmecken.\n\nDa du den Modus \"Einkaufsliste\" gewählt hast, muss ich wissen, welche Zutaten du bereits zu Hause hast, um dir die fehlenden Zutaten zu nennen.\n\n**Welche der oben genannten Zutaten hast du bereits in deiner Küche?** (Bitte liste sie auf, dann erstelle ich die Einkaufsliste für den Rest.)",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -40,19 +22,5 @@
       "dauer_ms": 71545,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "antwort_nicht_leer",
-      "status": "bestanden",
-      "detail": "1423 Zeichen"
-    },
-    {
-      "typ": "erwaehnt_nicht",
-      "status": "verletzt",
-      "detail": "unerwuenscht enthalten: ['Kuerbissuppe', 'Kuerbis']"
-    }
-  ],
-  "fall_status": "verletzt",
-  "dauer_s": 108.3
+  ]
 }

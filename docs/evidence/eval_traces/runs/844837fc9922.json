@@ -1,20 +1,11 @@
 {
-  "id": "einfach_tomate_mozzarella",
-  "beschreibung": "Einfache Rezeptfrage - gerader Weg: genau EINE Recherche, dann Antwort (System-Prompt: 'hoechstens einmal recherchieren').",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Was kann ich mit Tomaten und Mozzarella kochen?",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "844837fc9922",
+  "zeit_start": "2026-08-02T14:29:58",
+  "dauer_ms": 24680,
+  "eingabe": "Was kann ich mit Tomaten und Mozzarella kochen?",
+  "modus": "einkaufsliste",
   "antwort": "## Cremiger Nudelauflauf mit Tomaten und Mozzarella\n\nDas klingt nach einem leckeren, sättigenden Gericht! Hier ist das Rezept für den **Cremigen Nudelauflauf mit Tomaten und Mozzarella**.\n\n**Zutaten (für 2 Personen):**\n*   200g Nudeln (z. B. Penne oder Fusilli)\n*   250g Kirschtomaten\n*   125g Mozzarella (in Würfel geschnitten)\n*   1 Zehe Knoblauch\n*   1 EL Olivenöl\n*   100ml Sahne (oder Frischkäse für eine leichtere Variante)\n*   Frisches Basilikum\n*   Salz, Pfeffer\n\n**Zubereitung:**\n1.  Nudeln nach Packungsanweisung in Salzwasser kochen und abgießen.\n2.  In einer Pfanne den Olivenöl erhitzen und den fein gehackten Knoblauch kurz anbraten (nicht braun werden lassen).\n3.  Die Kirschtomaten (halbiert oder ganz, je nach Größe) hinzufügen und kurz mitköcheln lassen, bis sie leicht weich werden.\n4.  Die Sahne (oder den Frischkäse) unterrühren und kurz aufkochen lassen.\n5.  Die gekochten Nudeln und die Hälfte des Mozzarellas sowie grob gerissene Basilikumblätter unter die Soße heben.\n6.  Alles in eine kleine Auflaufform füllen und mit dem restlichen Mozzarella bestreuen.\n7.  Im vorgeheizten Ofen bei 200°C Ober-/Unterhitze ca. 10–15 Minuten überbacken, bis der Käse goldbraun und blubbernd ist.\n\nDa du im Modus \"Einkaufsliste\" bist, muss ich wissen, was du bereits zu Hause hast, um dir die fehlenden Zutaten zu nennen.\n\n**Welche dieser Zutaten hast du bereits vorrätig?**\n(Bitte liste die vorhandenen Zutaten auf, z. B. \"Nudeln, Mozzarella, Basilikum\". Ich gehe davon aus, dass du Grundzutaten wie Salz, Pfeffer und Öl/Wasser hast, falls du sie nicht explizit nennst.)",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -31,29 +22,5 @@
       "dauer_ms": 10190,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "antwort_nicht_leer",
-      "status": "bestanden",
-      "detail": "1580 Zeichen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: 1x aufgerufen"
-    },
-    {
-      "typ": "tool_nicht_aufgerufen",
-      "status": "bestanden",
-      "detail": "naehrwerte_schaetzen: nicht aufgerufen"
-    },
-    {
-      "typ": "schrittzahl",
-      "status": "bestanden",
-      "detail": "1 Aktionen (Korridor 1-8)"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 24.7
+  ]
 }

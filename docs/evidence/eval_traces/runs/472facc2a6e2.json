@@ -1,28 +1,11 @@
 {
-  "id": "schwer_kombi_constraints",
-  "beschreibung": "SCHWERER FALL: 4 Gerichte, vegan UND glutenfrei UND max 400 kcal, 3 Personen, abwechslungsreich. Viele gleichzeitige Constraints - hier erwarten wir Verletzungen (z.B. kcal trotz Revision ueber Limit oder tierische Zutat aus schlecht gefilterter Recherche).",
-  "erwartet_schwer": true,
-  "warum_schwer": "Die Recherche liefert selten Rezepte, die vegan+glutenfrei+kalorienarm zugleich sind; der Workflow revidiert nur EINMAL pro Gericht. Wir erwarten, dass mindestens ein Constraint reisst.",
-  "eingabe": {
-    "nachricht": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen.",
-    "modus": "einkaufsliste"
-  },
-  "profil": {
-    "ernaehrung": [
-      "vegan",
-      "glutenfrei"
-    ],
-    "geschmack": [],
-    "wichtig": [],
-    "bewertungen": {}
-  },
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-03",
-  "fehler": null,
   "trace_id": "472facc2a6e2",
+  "zeit_start": "2026-08-03T09:36:23",
+  "dauer_ms": 286834,
+  "eingabe": "Plane mir 4 abwechslungsreiche Abendessen fuer die Woche, maximal 400 kcal pro Portion, fuer 3 Personen.",
+  "modus": "einkaufsliste",
   "antwort": "Ich konnte leider keine passenden Rezepte fuer den Wochenplan finden.",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -103,29 +86,5 @@
       "dauer_ms": 0,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: 4x aufgerufen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "verletzt",
-      "detail": "naehrwerte_schaetzen: 0x aufgerufen, erwartet >= 4"
-    },
-    {
-      "typ": "kcal_limit",
-      "status": "neutral",
-      "detail": "keine kcal-Angabe in der Antwort gefunden"
-    },
-    {
-      "typ": "verbotene_zutaten",
-      "status": "neutral",
-      "detail": "keine Zutaten-/Listenzeilen gefunden"
-    }
-  ],
-  "fall_status": "verletzt",
-  "dauer_s": 286.8
+  ]
 }

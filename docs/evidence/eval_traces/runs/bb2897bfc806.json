@@ -1,20 +1,11 @@
 {
-  "id": "portionen_skalierung",
-  "beschreibung": "Harter Constraint: Personenzahl. Skalierung MUSS ueber portionen_skalieren laufen (kein Kopfrechnen); Stichprobe: 400g*3=1200, 2*3=6, 300g*3=900, 1/2 TL*3=1,5. Keine Recherche noetig (situationsabhaengige Tool-Wahl).",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Ich habe ein Rezept fuer 2 Personen: 400g Reis, 2 Zwiebeln, 300g Gemuese, 1/2 TL Salz. Rechne mir die Mengen fuer 6 Personen um.",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "bb2897bfc806",
+  "zeit_start": "2026-08-02T14:34:06",
+  "dauer_ms": 31162,
+  "eingabe": "Ich habe ein Rezept fuer 2 Personen: 400g Reis, 2 Zwiebeln, 300g Gemuese, 1/2 TL Salz. Rechne mir die Mengen fuer 6 Personen um.",
+  "modus": "einkaufsliste",
   "antwort": "## Reis mit Gemüse (für 6 Personen)\n\nHier sind die umgerechneten Zutatenmengen für 6 Personen:\n\n- 1200g Reis\n- 6 Zwiebeln\n- 900g Gemüse\n- 1,5 TL Salz\n\nDa du im Modus \"Fehlende Zutaten dürfen ergänzt und als Einkaufsliste ausgegeben werden\" bist, benötige ich noch eine Information, um die Einkaufsliste zu erstellen:\n\n**Welche dieser Zutaten hast du bereits zu Hause?**\n\nSobald du mir sagst, was vorhanden ist, erstelle ich dir die passende Einkaufsliste für die fehlenden Zutaten.",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Tool",
@@ -38,24 +29,5 @@
       "dauer_ms": 5,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "portionen_skalieren: 1x aufgerufen"
-    },
-    {
-      "typ": "tool_nicht_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: nicht aufgerufen"
-    },
-    {
-      "typ": "erwaehnt_alle",
-      "status": "bestanden",
-      "detail": "alle 4 Begriffe enthalten"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 31.2
+  ]
 }
