@@ -1,5 +1,6 @@
 """Tests fuer das Parsen der VLM-Antwort (ohne echten Modellaufruf)."""
 
+from app.core.text_utils import entferne_reasoning
 from app.tools.vision import _parse_zutaten
 
 
@@ -20,3 +21,15 @@ def test_parse_fallback_kommaliste():
 def test_parse_leer():
     assert _parse_zutaten("[]") == []
     assert _parse_zutaten("") == []
+
+
+def test_parse_mit_think_block():
+    # Regression: Reasoning-Modelle (z. B. qwen3) stellen einen <think>-Block
+    # voran. Ohne entferne_reasoning zerlegte der Zeilen-Fallback den Denktext
+    # in Dutzende Pseudo-"Zutaten" (real beobachtet: 95 statt 6). erkenne_zutaten_
+    # aus_bild wendet deshalb erst entferne_reasoning an, bevor geparst wird.
+    text = (
+        "<think>\nIch sehe einen Kuehlschrank.\n- oberste Ablage: ein Glas\n"
+        "- Tuer: Flaschen\n</think>\n[\"Eier\", \"Milch\", \"Tofu\"]"
+    )
+    assert _parse_zutaten(entferne_reasoning(text)) == ["Eier", "Milch", "Tofu"]

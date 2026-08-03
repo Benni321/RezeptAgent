@@ -128,3 +128,38 @@ def test_rezept_aus_antwort_ohne_listenzeilen_gibt_none():
     # Lieber KEIN Kochbuch-Eintrag als ein falscher (ehrliche Grenze der Heuristik).
     assert kb.rezept_aus_antwort("Rezept", "Nur Fliesstext ohne jede Liste.") is None
     assert kb.rezept_aus_antwort("", "- 4 Eier") is None
+
+
+def test_rezept_aus_antwort_schneidet_einkaufsliste_ab():
+    # Bug-Regression: Die (optionale) Einkaufsliste steht im selben Listenformat
+    # NACH der Zubereitung -- ohne Stop landeten ihre Zeilen faelschlich als
+    # weitere Zubereitungsschritte im Kochbuch-Eintrag.
+    antwort = (
+        "**Rezept: Shakshuka**\n\n**Zutaten:**\n- 4 Eier\n- 1 Paprika\n\n"
+        "**Zubereitung:**\n1. Zwiebel anbraten\n2. Eier hineingeben\n\n"
+        "**Einkaufsliste:**\n- 1 Paprika (fehlt)\n- Fladenbrot (fehlt)"
+    )
+    extrakt = kb.rezept_aus_antwort("Shakshuka", antwort)
+    assert extrakt["zutaten"] == ["4 Eier", "1 Paprika"]
+    assert extrakt["zubereitung"] == ["Zwiebel anbraten", "Eier hineingeben"]
+    assert not any("fehlt" in s for s in extrakt["zubereitung"])
+
+
+# --- Loeschen -----------------------------------------------------------------
+
+def test_loesche_entfernt_gelerntes_rezept(monkeypatch, tmp_path):
+    _mit_kochbuch(monkeypatch, tmp_path, [{"titel": "Linsen-Dal", "zutaten": ["Linsen"]}])
+    assert kb.loesche("Linsen-Dal") is True
+    assert kb.lade_alle() == []
+
+
+def test_loesche_lehnt_seed_ab(monkeypatch, tmp_path):
+    _mit_kochbuch(monkeypatch, tmp_path, [{"titel": "Shakshuka", "zutaten": ["Eier"], "quelle": "seed"}])
+    # Seeds sind mitgeliefertes, git-getracktes Material -- ueber die GUI nicht loeschbar.
+    assert kb.loesche("Shakshuka") is False
+    assert len(kb.lade_alle()) == 1
+
+
+def test_loesche_unbekannten_titel_gibt_false(monkeypatch, tmp_path):
+    monkeypatch.setenv("KOCHBUCH_DIR", str(tmp_path))
+    assert kb.loesche("Gibt es nicht") is False

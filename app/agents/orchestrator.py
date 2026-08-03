@@ -121,9 +121,12 @@ WENN ETWAS SCHIEFGEHT (reagiere sichtbar, statt abzubrechen oder zu erfinden):
   an die harte Vorgabe (Regel 0) oder schlage eine passende Alternative vor -
   ignoriere weder das eine noch das andere stillschweigend.
 
-Formuliere am Ende eine klare deutsche Antwort: gewaehltes Rezept (Zutaten +
-Zubereitung) und - falls erstellt - die passende Einkaufsliste. Erfinde keine
-Fakten; bei Unklarheit sinnvoll annehmen und kurz hinweisen."""
+Formuliere am Ende eine klare deutsche Antwort. Beginne sie IMMER mit einer
+Ueberschrift, die NUR den Namen des gewaehlten Rezepts enthaelt (Format:
+"## <Rezeptname>") - auch dann, wenn das Rezept aus deinem eigenen Wissen
+stammt. Danach: gewaehltes Rezept (Zutaten + Zubereitung) und - falls erstellt -
+die passende Einkaufsliste. Erfinde keine Fakten; bei Unklarheit sinnvoll
+annehmen und kurz hinweisen."""
 
 def create_orchestrator():
     """

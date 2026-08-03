@@ -106,13 +106,17 @@ def _slug(titel: str) -> str:
 
 
 def speichere_rezept(titel: str, zutaten: list[str], sterne: int | None = None,
-                     kcal: float | None = None, quelle: str = "bewertung") -> Path:
+                     kcal: float | None = None, quelle: str = "bewertung",
+                     zubereitung: list[str] | None = None) -> Path:
     """Legt ein Rezept in der Wissensbasis ab (bzw. aktualisiert es per Titel-Slug).
 
-    Wird NUR vom deterministischen API-Pfad aufgerufen (Bewertung >= 4 Sterne),
-    nie vom Agenten selbst (VL03: Schreiben ist keine Agenten-Aktion).
-    Gelernte Rezepte bekommen das Praefix 'gelernt_', Seeds heissen 'seed_*' --
-    so bleibt sichtbar, was mitgeliefert und was wirklich gelernt wurde.
+    Wird NUR vom deterministischen API-Pfad aufgerufen (Bewertung >= 4 Sterne
+    oder manuelles Hinzufuegen), nie vom Agenten selbst (VL03: Schreiben ist
+    keine Agenten-Aktion). Gelernte/manuelle Rezepte bekommen das Praefix
+    'gelernt_', Seeds heissen 'seed_*' -- so bleibt sichtbar, was mitgeliefert
+    und was wirklich gelernt/hinzugefuegt wurde. Die Zubereitung wird (falls
+    vorhanden) mitgespeichert, damit die GUI ein Rezept komplett anzeigen kann,
+    OHNE den Agenten zu starten (0 Tokens).
     """
     verzeichnis = _kochbuch_dir()
     verzeichnis.mkdir(parents=True, exist_ok=True)
@@ -123,10 +127,27 @@ def speichere_rezept(titel: str, zutaten: list[str], sterne: int | None = None,
         "sterne": sterne,
         "kcal_pro_portion": kcal,
         "quelle": quelle,
+        "zubereitung": [s.strip() for s in (zubereitung or []) if s.strip()] or None,
     }
     pfad = verzeichnis / f"{praefix}{_slug(titel)}.json"
     pfad.write_text(json.dumps(daten, ensure_ascii=False, indent=2), encoding="utf-8")
     return pfad
+
+
+def loesche(titel: str) -> bool:
+    """Loescht ein GELERNTES/manuelles Kochbuch-Rezept per Titel. True, wenn
+    etwas geloescht wurde.
+
+    Bewusst NUR 'gelernt_'-Eintraege -- Seeds sind mitgeliefertes, git-getracktes
+    Repo-Material und ueber die GUI nicht entfernbar (sonst wuerde ein Klick eine
+    getrackte Datei aus dem Repo-Arbeitsverzeichnis loeschen, ohne dass Git das
+    mitbekommt).
+    """
+    pfad = _kochbuch_dir() / f"gelernt_{_slug(titel)}.json"
+    if not pfad.is_file():
+        return False
+    pfad.unlink()
+    return True
 
 
 _LISTEN_ZEILE = re.compile(r"^\s*(?:[-*•]|\d+\.)\s+(.*)$")
@@ -134,28 +155,42 @@ _KCAL = re.compile(r"(\d{2,4})\s*kcal", re.IGNORECASE)
 
 
 def rezept_aus_antwort(titel: str, antwort: str) -> dict | None:
-    """Extrahiert Zutaten (+ kcal, falls genannt) heuristisch aus einer Agent-Antwort.
+    """Extrahiert Zutaten, Zubereitung (+ kcal, falls genannt) heuristisch aus
+    einer Agent-Antwort.
 
-    Heuristik: Listenzeilen VOR dem Zubereitungs-Abschnitt gelten als Zutaten
-    (typisches Antwortformat des Orchestrators). Nichts gefunden -> None, dann
-    wird nur die Sterne-Bewertung gespeichert, kein Kochbuch-Eintrag (ehrliche
-    Grenze: lieber kein Eintrag als ein falscher).
+    Heuristik: Listenzeilen VOR dem Zubereitungs-Abschnitt gelten als Zutaten,
+    danach als Zubereitungsschritte (typisches Antwortformat des Orchestrators).
+    Eine evtl. angehaengte Einkaufsliste beendet die Erfassung (sie steht im
+    selben Listenformat NACH der Zubereitung und gehoert nicht ins Rezept --
+    ohne diesen Stop landeten ihre Zeilen faelschlich als weitere
+    Zubereitungsschritte im Kochbuch-Eintrag). Keine Zutaten gefunden -> None,
+    dann wird nur die Sterne-Bewertung gespeichert, kein Kochbuch-Eintrag
+    (ehrliche Grenze: lieber kein Eintrag als ein falscher).
     """
     if not titel.strip() or not antwort:
         return None
     zutaten: list[str] = []
+    zubereitung: list[str] = []
+    im_zubereitungsteil = False
     for zeile in antwort.splitlines():
-        if re.search(r"zubereitung|anleitung|schritte", zeile, re.IGNORECASE):
+        if re.search(r"einkaufsliste", zeile, re.IGNORECASE):
             break
+        if not im_zubereitungsteil and re.search(r"zubereitung|anleitung|schritte", zeile, re.IGNORECASE):
+            im_zubereitungsteil = True
+            continue
         m = _LISTEN_ZEILE.match(zeile)
         if m and m.group(1).strip():
-            zutaten.append(m.group(1).strip()[:100])
+            if im_zubereitungsteil:
+                zubereitung.append(m.group(1).strip()[:200])
+            else:
+                zutaten.append(m.group(1).strip()[:100])
     if not zutaten:
         return None
     kcal_treffer = _KCAL.search(antwort)
     return {
         "titel": titel.strip(),
         "zutaten": zutaten[:25],
+        "zubereitung": zubereitung[:15],
         "kcal": float(kcal_treffer.group(1)) if kcal_treffer else None,
     }
 

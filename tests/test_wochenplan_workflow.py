@@ -18,6 +18,17 @@ class _FakeTool:
         return self.rueckgabe
 
 
+class _SpyTool:
+    """Wie _FakeTool, zeichnet aber jede Eingabe auf (fuer Query-Vergleiche)."""
+    def __init__(self, rueckgabe):
+        self.rueckgabe = rueckgabe
+        self.aufrufe: list[dict] = []
+
+    def invoke(self, eingabe):
+        self.aufrufe.append(eingabe)
+        return self.rueckgabe
+
+
 class _FakeResp:
     def __init__(self, content):
         self.content = content
@@ -29,6 +40,28 @@ class _FakeModel:
 
     def invoke(self, _):
         return _FakeResp(self._content)
+
+
+class _KaputtesModel:
+    """Simuliert einen fehlschlagenden Modellaufruf (z. B. Rate-Limit-Exception)."""
+    def invoke(self, _):
+        raise RuntimeError("simulierter Modellfehler")
+
+
+# --- _json_aus_text: robust gegen haeufige Modell-Marotten ------------------------
+
+def test_json_aus_text_mit_markdown_codefence():
+    text = '```json\n{"titel": "Curry", "zutaten": ["Reis"]}\n```'
+    assert wf._json_aus_text(text) == {"titel": "Curry", "zutaten": ["Reis"]}
+
+
+def test_json_aus_text_mit_trailing_komma():
+    text = '{"titel": "Curry", "zutaten": ["Reis", "Kokosmilch",]}'
+    assert wf._json_aus_text(text) == {"titel": "Curry", "zutaten": ["Reis", "Kokosmilch"]}
+
+
+def test_json_aus_text_ohne_json_gibt_none():
+    assert wf._json_aus_text("Tut mir leid, ich habe kein passendes Rezept gefunden.") is None
 
 
 # --- erkenne_wochenplan -----------------------------------------------------------
@@ -50,6 +83,13 @@ def test_erkenne_wochenplan_einzelrezept_trotz_stichwort(monkeypatch):
     monkeypatch.setattr(wf, "_modell",
                         lambda temperature=0: _FakeModel('{"wochenplan": false, "anzahl_gerichte": 1}'))
     assert wf.erkenne_wochenplan("Ein schnelles Rezept fuer diese Woche") is None
+
+
+def test_erkenne_wochenplan_bei_modellfehler_gibt_none(monkeypatch):
+    # Ein Modellfehler (z. B. Rate-Limit) darf die Anfrage nicht abbrechen -- sie
+    # laeuft dann einfach als normales Einzelrezept weiter (W9-Geist).
+    monkeypatch.setattr(wf, "_modell", lambda temperature=0: _KaputtesModel())
+    assert wf.erkenne_wochenplan("Plane mir 3 Abendessen fuer die Woche") is None
 
 
 # --- plane_woche: garantierte Schritt-Reihenfolge ---------------------------------
@@ -93,6 +133,81 @@ def test_plane_woche_revidiert_bei_kcal_ueberschreitung(monkeypatch):
     assert any("UEBER Limit" in (s.get("inhalt") or "") for s in erg["trace"])
 
 
+def test_extrahiere_rezept_bei_modellfehler_gibt_none():
+    # Wie bei erkenne_wochenplan: ein Modellfehler darf nur DIESES Gericht kosten,
+    # nicht die ganze Wochenplan-Anfrage crashen lassen.
+    assert wf._extrahiere_rezept("irgendein Rechercheergebnis", [], _KaputtesModel()) is None
+
+
+def test_formuliere_antwort_faellt_bei_modellfehler_auf_rohtext_zurueck():
+    # Die Gerichte + Einkaufsliste sind zu diesem Zeitpunkt bereits deterministisch
+    # fertig (wochenplan_zusammenstellen) -- ein Fehler NUR bei der sprachlichen
+    # Formulierung darf sie nicht wegwerfen.
+    gerichte = [{"titel": "Linsen-Dal", "zutaten": ["Linsen", "Zwiebel"]}]
+    text = wf._formuliere_antwort(gerichte, "Einkaufsliste: Linsen, Zwiebel",
+                                  ["Linsen-Dal: ~400 kcal/Portion"], _KaputtesModel())
+    assert "Linsen-Dal" in text
+    assert "Einkaufsliste: Linsen, Zwiebel" in text
+    assert "400 kcal" in text
+
+
+def test_plane_woche_variiert_suche_nach_fehlgeschlagener_extraktion(monkeypatch):
+    # Bug-Fix: Ohne diese Variation wiederholt ein fehlgeschlagener Versuch (kein
+    # brauchbarer Treffer / keine JSON-Extraktion) exakt dieselbe Suchanfrage --
+    # die aus demselben Grund erneut scheitert, statt der naechsten Recherche eine
+    # echte neue Chance zu geben.
+    spy = _SpyTool("Rechercheergebnis-Text")
+    monkeypatch.setattr(wf, "recherche_rezepte", spy)
+    ergebnisse = iter([None, {"titel": "X", "zutaten": ["a"]}])  # 1. Versuch scheitert, 2. gelingt
+    monkeypatch.setattr(wf, "_extrahiere_rezept", lambda text, vermeide, model: next(ergebnisse))
+    monkeypatch.setattr(wf, "_formuliere_antwort", lambda g, p, n, m: "Plan")
+    monkeypatch.setattr(wf, "_modell", lambda temperature=0: _FakeModel(""))
+
+    wf.plane_woche("Plane 2 Gerichte", {"anzahl_gerichte": 2, "kcal_limit": None, "portionen": 2},
+                   harte_vorgaben=[])
+
+    anfragen = [a["anfrage"] for a in spy.aufrufe]
+    assert len(anfragen) == 2
+    assert anfragen[0] != anfragen[1]
+    assert "Versuch" in anfragen[1]
+
+
+def test_plane_woche_meldet_wenn_weniger_gerichte_als_gewuenscht(monkeypatch):
+    # Transparenz statt stiller Kuerzung: 2 gewuenscht, nur 1 gefunden -> die
+    # Antwort-Formulierung muss einen klaren Hinweis darauf bekommen, UND
+    # anzahl_angefragt muss strukturiert die Luecke zeigen (nicht nur Prosa).
+    monkeypatch.setattr(wf, "recherche_rezepte", _FakeTool("Text"))
+    ergebnisse = iter([None, {"titel": "X", "zutaten": ["a"]}])
+    monkeypatch.setattr(wf, "_extrahiere_rezept", lambda text, vermeide, model: next(ergebnisse))
+    erfasst = {}
+
+    def fake_formuliere(g, p, notizen, m):
+        erfasst["notizen"] = notizen
+        return "Plan"
+
+    monkeypatch.setattr(wf, "_formuliere_antwort", fake_formuliere)
+    monkeypatch.setattr(wf, "_modell", lambda temperature=0: _FakeModel(""))
+
+    erg = wf.plane_woche("Plane 2 Gerichte", {"anzahl_gerichte": 2, "kcal_limit": None, "portionen": 2},
+                         harte_vorgaben=[])
+
+    assert len(erg["gerichte"]) == 1
+    assert any("Nur 1 von 2" in n for n in erfasst["notizen"])
+    assert erg["anzahl_angefragt"] == 2
+
+
+def test_plane_woche_gibt_anzahl_angefragt_auch_bei_vollstaendigem_erfolg(monkeypatch):
+    monkeypatch.setattr(wf, "recherche_rezepte", _FakeTool("Text"))
+    monkeypatch.setattr(wf, "_extrahiere_rezept", lambda text, vermeide, model: {"titel": "X", "zutaten": ["a"]})
+    monkeypatch.setattr(wf, "_formuliere_antwort", lambda g, p, n, m: "Plan")
+    monkeypatch.setattr(wf, "_modell", lambda temperature=0: _FakeModel(""))
+
+    erg = wf.plane_woche("Plane 2 Gerichte", {"anzahl_gerichte": 2, "kcal_limit": None, "portionen": 2},
+                         harte_vorgaben=[])
+    assert len(erg["gerichte"]) == 2
+    assert erg["anzahl_angefragt"] == 2
+
+
 def test_plane_woche_ohne_treffer_bricht_nicht_ab(monkeypatch):
     monkeypatch.setattr(wf, "recherche_rezepte", _FakeTool("WEBSUCHE-LEER: nichts"))
     monkeypatch.setattr(wf, "_extrahiere_rezept", lambda text, vermeide, model: None)
@@ -103,3 +218,4 @@ def test_plane_woche_ohne_treffer_bricht_nicht_ab(monkeypatch):
                          harte_vorgaben=[])
     # Kein Gericht gefunden -> ehrliche Meldung statt Crash oder Halluzination.
     assert "keine passenden rezepte" in erg["antwort"].lower()
+    assert erg["anzahl_angefragt"] == 2

@@ -22,7 +22,7 @@ from app.core.logging_config import (
     beende_trace, get_logger, log_ereignis, log_span, persistiere_trace, starte_trace,
 )
 from app.core import praeferenzen
-from app.core.text_utils import entferne_reasoning
+from app.core.text_utils import entferne_reasoning, extrahiere_rezept_titel
 from app.core.wochenplan_workflow import erkenne_wochenplan, plane_woche
 from app.tools.vision import erkenne_zutaten_aus_bild
 
@@ -150,6 +150,9 @@ def run_rezept_agent(
             vorhandene_zutaten=erkannte_zutaten or [],
         )
         ergebnis["erkannte_zutaten"] = erkannte_zutaten
+        # Ein Wochenplan hat keinen EINEN Rezeptnamen -> bewusst kein Titel
+        # (die GUI zeigt dann einen neutralen Platzhalter im Bewertungsfeld).
+        ergebnis["rezept_titel"] = None
         return _schliesse_trace(trace_id, t_start, nachricht, modus, ergebnis)
 
     eingabe = _baue_eingabe(nachricht, modus, harte_vorgaben, anmerkungen)
@@ -226,5 +229,11 @@ def run_rezept_agent(
                              msg.name, dauer_ms=dauer, status=status)
                 t_letztes = time.monotonic()
 
+    # Rezeptname als eigenes, maschinenlesbares Feld (fuer Bewertung/Kochbuch in
+    # der GUI): Prompt fordert '## <Rezeptname>' als erste Zeile (orchestrator.py),
+    # die Heuristik faengt Abweichungen ab; None, wenn kein belastbarer Titel
+    # gefunden wird (GUI zeigt dann einen neutralen Platzhalter).
     return _schliesse_trace(trace_id, t_start, nachricht, modus,
-                            {"antwort": antwort, "trace": trace, "erkannte_zutaten": erkannte_zutaten})
+                            {"antwort": antwort, "trace": trace,
+                             "erkannte_zutaten": erkannte_zutaten,
+                             "rezept_titel": extrahiere_rezept_titel(antwort)})

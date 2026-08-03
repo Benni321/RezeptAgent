@@ -25,6 +25,8 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
 
+from app.core.text_utils import entferne_reasoning
+
 load_dotenv()
 
 VISION_PROMPT = (
@@ -86,4 +88,7 @@ def erkenne_zutaten_aus_bild(image_bytes: bytes, mime_type: str = "image/jpeg") 
         ]
     )
     antwort = model.invoke([nachricht])
-    return _parse_zutaten(antwort.content)
+    # entferne_reasoning: Reasoning-Modelle (z. B. qwen3) stellen einen <think>-Block
+    # voran; ohne Filter zerlegt der Zeilen-Fallback von _parse_zutaten den Denktext
+    # in Dutzende Pseudo-"Zutaten" (real beobachtet: 95 statt 6 echte Zutaten).
+    return _parse_zutaten(entferne_reasoning(antwort.content))

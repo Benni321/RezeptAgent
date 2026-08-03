@@ -135,8 +135,12 @@ def _hole_schaetzung(rezept_titel: str, zutaten: list[str]) -> dict[str, float] 
     Gemeinsamer Kern von naehrwerte_schaetzen (Tool, Text-Ausgabe) und
     schaetze_kcal_pro_portion (Zahl fuer den Wochenplan-Workflow) -- keine Duplizierung.
     """
+    # Modell-Split: reine Schaetz-Completion ohne Tool-Calling -- der einfachste
+    # Kandidat fuer das kleine Modell mit eigenem TPM-Topf (Begruendung:
+    # recherche_agent.py). Das bestehende "/no_think"-Suffix im Prompt oben bleibt
+    # unabhaengig davon bestehen.
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL_KLEIN", "llama-3.1-8b-instant"),
         temperature=0,
         max_retries=5,  # transiente 429 (Free-Tier-TPM) automatisch abfangen (W9)
     )
