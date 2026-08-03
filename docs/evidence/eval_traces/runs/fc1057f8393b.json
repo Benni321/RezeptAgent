@@ -1,20 +1,11 @@
 {
-  "id": "leere_suche_fallback",
-  "beschreibung": "Fehlerfall: Suche nach Fantasie-Zutaten laeuft ins Leere. Erwartet: Agent erkennt den Fehlschlag und faellt TRANSPARENT auf eigenes Wissen zurueck oder sagt ehrlich, dass nichts gefunden wurde - statt Treffer zu erfinden.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Was kann ich mit Quargelbrumsel und Fizzelkraut kochen?",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-03",
-  "fehler": null,
   "trace_id": "fc1057f8393b",
+  "zeit_start": "2026-08-03T09:29:08",
+  "dauer_ms": 113604,
+  "eingabe": "Was kann ich mit Quargelbrumsel und Fizzelkraut kochen?",
+  "modus": "einkaufsliste",
   "antwort": "Hier ist deine Einkaufsliste für das **Quarkcreme mit Gurke und Dill**:\n\n- 250 g Magerquark\n- 1 kleine Gurke\n- 1 Bund frischer Dill\n- 100 ml Schmand oder saure Sahne\n- 1 Zwiebel\n- 1 TL Senf\n\nViel Erfolg beim Kochen!",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -59,24 +50,5 @@
       "dauer_ms": 1,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "antwort_nicht_leer",
-      "status": "bestanden",
-      "detail": "215 Zeichen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: 1x aufgerufen"
-    },
-    {
-      "typ": "erwaehnt_eines",
-      "status": "verletzt",
-      "detail": "keiner von 9 Begriffen enthalten"
-    }
-  ],
-  "fall_status": "verletzt",
-  "dauer_s": 113.6
+  ]
 }

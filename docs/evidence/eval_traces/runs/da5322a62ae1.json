@@ -1,27 +1,11 @@
 {
-  "id": "vegan_profil",
-  "beschreibung": "Harter Constraint aus dem Profil: vegan. In der Zutaten-/Einkaufsliste duerfen keine tierischen Produkte stehen (vegane Varianten wie 'vegane Sahne' sind erlaubt).",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Schlag mir ein cremiges Pasta-Gericht zum Abendessen vor.",
-    "modus": "einkaufsliste"
-  },
-  "profil": {
-    "ernaehrung": [
-      "vegan"
-    ],
-    "geschmack": [],
-    "wichtig": [],
-    "bewertungen": {}
-  },
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-02",
-  "fehler": null,
   "trace_id": "da5322a62ae1",
+  "zeit_start": "2026-08-02T14:35:24",
+  "dauer_ms": 57286,
+  "eingabe": "Schlag mir ein cremiges Pasta-Gericht zum Abendessen vor.",
+  "modus": "einkaufsliste",
   "antwort": "## Cremige Gemüsepasta mit Cashew-Sauce\n\nHier ist ein leckeres, cremiges und veganes Pasta-Rezept für dich. Die Sauce basiert auf Cashewkernen und Hafermilch, was eine herrlich sämige Konsistenz ergibt, ohne tierische Produkte zu verwenden.\n\n**Zutaten (für 2 Personen):**\n*   200 g Nudeln (z. B. Penne oder Fusilli)\n*   100 g Cashewkerne (am Vortag oder mind. 2 Stunden in warmem Wasser einweichen)\n*   100 ml Hafermilch (ungesüßt)\n*   100 ml Gemüsebrühe\n*   1 EL Olivenöl\n*   1 kleine Zwiebel, gewürfelt\n*   1 Knoblauchzehe, fein gehackt\n*   1 kleine Karotte, in kleine Würfel geschnitten\n*   100 g Erbsen (frisch oder aus der Dose)\n*   1 Bund Frühlingszwiebeln, in Ringe geschnitten\n*   Salz, Pfeffer, evtl. etwas Zitronensaft zum Abschmecken\n\n**Zubereitung:**\n1.  **Sauce vorbereiten:** Die eingeweichten Cashewkerne abgießen und in einen Mixer geben. Mit der Hafermilch, der Gemüsebrühe und einer Prise Salz zu einer glatten, cremigen Sauce mixen. Beiseite stellen.\n2.  **Nudeln kochen:** Die Nudeln in Salzwasser nach Packungsanweisung al dente kochen.\n3.  **Gemüse anbraten:** In einem großen Topf oder einer Pfanne das Olivenöl erhitzen. Zwiebeln und Knoblauch kurz anbraten, bis sie glasig sind. Karottenwürfel hinzufügen und 3–4 Minuten mitbraten, bis sie leicht weich sind.\n4.  **Sauce köcheln:** Die Cashew-Sauce in die Pfanne gießen und aufkochen lassen. Unter Rühren 2–3 Minuten köcheln lassen, bis die Sauce leicht eindickt.\n5.  **Fertigstellen:** Die Erbsen und Frühlingszwiebeln hinzufügen und kurz erwärmen. Mit Salz, Pfeffer und ggf. einem Spritzer Zitronensaft abschmecken.\n6.  **Servieren:** Die abgegossenen Nudeln unter die Sauce heben und sofort servieren.\n\nDa du den Modus \"Einkaufsliste\" gewählt hast, erstelle ich nun eine Liste der fehlenden Zutaten. Bitte gib mir kurz Bescheid, welche Zutaten du bereits zu Hause hast, damit ich die Liste genau anpassen kann. (Falls du nichts davon hast, liste ich alles auf.)\n\nWelche dieser Zutaten hast du bereits?\n*   Nudeln\n*   Cashewkerne\n*   Hafermilch\n*   Gemüsebrühe\n*   Olivenöl\n*   Zwiebeln\n*   Knoblauch\n*   Karotten\n*   Erbsen\n*   Frühlingszwiebeln",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -38,24 +22,5 @@
       "dauer_ms": 13929,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "antwort_nicht_leer",
-      "status": "bestanden",
-      "detail": "2123 Zeichen"
-    },
-    {
-      "typ": "verbotene_zutaten",
-      "status": "bestanden",
-      "detail": "27 Listenzeilen geprueft, keine verbotene Zutat"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: 1x aufgerufen"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 57.3
+  ]
 }

@@ -35,7 +35,14 @@ Deine einzige Aufgabe: zu einer Anfrage passende Rezepte im Internet finden.
 
 Vorgehen:
 - Nutze das web_search-Tool, um nach konkreten Rezepten zu suchen.
-- Suche bei Bedarf mehrfach mit unterschiedlichen Suchbegriffen.
+- Ist die Anfrage UEBERSPEZIFIZIERT (langer Satz mit vielen Vorgaben wie kcal,
+  Personenzahl, Ernaehrungsform), suche NICHT nach dem ganzen Satz: kuerze sie
+  selbst auf Kernbegriffe (Gerichtsart/Hauptzutat + die 1-2 wichtigsten
+  Vorgaben, z. B. "vegetarisches Abendessen kalorienarm Rezept").
+- Fuehre INSGESAMT HOECHSTENS ZWEI Suchen aus. Danach entscheide mit dem, was
+  vorliegt: Fasse die besten Treffer zusammen - auch wenn sie nur teilweise
+  passen - oder melde ehrlich, dass nichts Passendes gefunden wurde. Suche
+  NIEMALS ein drittes Mal.
 - Bewerte die Treffer und waehle die passendsten 1-3 Rezepte aus.
 
 Gib das Ergebnis KOMPAKT und STRUKTURIERT zurueck, je Rezept:
@@ -87,12 +94,12 @@ def recherche_rezepte(anfrage: str) -> str:
     """
     try:
         agent = create_recherche_agent()
-        # recursion_limit=6 deckelt die Schritte des Sub-Agenten (~3 Such-Zyklen).
-        # Excessive-Agency-Begrenzung (VL03): kein unbegrenztes Tool-Feuern, auch
-        # nicht bei einer injizierten oder entgleisten Anfrage.
+        # recursion_limit=10 deckelt die Schritte des Sub-Agenten (~5 Such-Zyklen);
+        # 6 reichte qwen3.6-27b nicht ("Sorry, need more steps", Eval 2026-08-02).
+        # Excessive-Agency-Begrenzung (VL03) bleibt: kein unbegrenztes Tool-Feuern.
         result = agent.invoke(
             {"messages": [HumanMessage(content=anfrage)]},
-            config={"recursion_limit": 6},
+            config={"recursion_limit": 10},
         )
     except Exception as exc:  # Sub-Agent-Fehler wird zur Observation, kein Lauf-Abbruch
         # Der Orchestrator sieht dies und kann reagieren (z. B. Rezept aus eigenem

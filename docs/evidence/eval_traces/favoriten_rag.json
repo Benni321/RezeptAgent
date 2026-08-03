@@ -31,11 +31,11 @@
       "kcal": 420
     }
   ],
-  "modell": "qwen/qwen3-32b",
-  "datum": "2026-07-15",
+  "modell": "qwen/qwen3.6-27b",
+  "datum": "2026-08-02",
   "fehler": null,
-  "trace_id": "fb8101e0f410",
-  "antwort": "Hier ist dein gespeichertes Lieblingsrezept und die dazugehörige Einkaufsliste:\n\n**Rezept: Gemüse-Curry mit Kokosmilch** (5 Sterne, ~540 kcal/Portion)\n1. 2 Süßkartoffeln schälen und in Würfel schneiden\n2. 400ml Kokosmilch mit 2 EL roter Currypaste vermengen\n3. Süßkartoffeln in der Curry-Kokos-Mischung 15-20 Minuten köcheln lassen\n4. Mit 200g Reis servieren\n\n**Einkaufsliste** (alle Zutaten müssen erworben werden):\n- 2 Süßkartoffeln\n- 400ml Kokosmilch (dose oder im Tetra-Pak)\n- 2 EL rote Currypaste (Thai-Style)\n- 200g Reis (Basmati oder Jasminreis empfohlen)\n\nDas Rezept ist vegetarisch und glutenfrei. Bei Fragen zur Zubereitung oder Anpassung der Portionen helfe ich gerne weiter!",
+  "trace_id": "6c42ceb76953",
+  "antwort": "## Gemuese-Curry mit Kokosmilch\n\nHier ist dein gespeichertes Lieblingsrezept aus dem persönlichen Kochbuch:\n\n**Zutaten:**\n- 2 Süßkartoffeln\n- 400 ml Kokosmilch\n- 2 EL rote Currypaste\n- 200 g Reis\n\n**Zubereitung:**\n1. Die Süßkartoffeln schälen und in Würfel schneiden.\n2. Den Reis nach Packungsanleitung garen.\n3. In einem Topf etwas Öl erhitzen und die rote Currypaste kurz anrösten.\n4. Die Süßkartoffelwürfel hinzufügen und kurz mitbraten.\n5. Mit der Kokosmilch ablöschen und bei mittlerer Hitze köcheln lassen, bis die Süßkartoffeln weich sind (ca. 10–15 Minuten).\n6. Das Curry mit dem Reis servieren.\n\n**Einkaufsliste (fehlende Zutaten):**\nDa keine vorhandenen Zutaten angegeben wurden, musst du alles einkaufen:\n- 2 Süßkartoffeln\n- 400 ml Kokosmilch\n- 2 EL rote Currypaste\n- 200 g Reis",
   "trace": [
     {
       "art": "aktion",
@@ -72,7 +72,7 @@
       "quelle": "Tool",
       "name": "einkaufsliste_erstellen",
       "inhalt": "Einkaufsliste (fehlende Zutaten):\n- 2 Suesskartoffeln\n- 400ml Kokosmilch\n- 2 EL rote Currypaste\n- 200g Reis",
-      "dauer_ms": 2,
+      "dauer_ms": 1,
       "status": "ok"
     }
   ],
@@ -94,5 +94,5 @@
     }
   ],
   "fall_status": "bestanden",
-  "dauer_s": 89.6
+  "dauer_s": 60.8
 }

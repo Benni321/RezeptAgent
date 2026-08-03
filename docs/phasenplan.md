@@ -6,6 +6,9 @@
 > Phase 2b (RAG mit Chroma + Embeddings, Teampartner) wurde **bewusst ersetzt**
 > durch das **Kochbuch-RAG** (BM25 über selbst gelernte Rezeptbasis,
 > `app/tools/kochbuch.py`) — Begründung in [PROJEKTDOKU.md](PROJEKTDOKU.md) („Kochbuch-RAG").
+> Zweite Abweichung: Die unten genannten Modelle (`qwen/qwen3-32b`,
+> Llama-4-Vision) hat Groq inzwischen zurückgezogen — aktuell läuft durchgängig
+> `qwen/qwen3.6-27b` (Modell-Drift, siehe [reflexion_drift.md](reflexion_drift.md)).
 > Aktueller Anforderungsstatus: [bewertungsmatrix.md](bewertungsmatrix.md).
 
 ## Leitprinzip

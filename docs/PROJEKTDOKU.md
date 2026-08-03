@@ -113,18 +113,43 @@ die Architektur ehrlich statt aufgebläht.
   bewusst nicht haben wollen (siehe [Sicherheit](#28-sicherheits-design-vl03));
   eine handgeschriebene TAO-Schleife hätte P3 (etabliertes Framework) verfehlt und
   Streaming/Tool-Binding neu erfunden.
-- **Modell: Groq `qwen/qwen3-32b`** — kostenlos, schnell, **zuverlässiges
+- **Modell: Groq `qwen/qwen3.6-27b`** (Text und Vision — ein multimodales
+  Modell, eine Deprecation-Quelle) — kostenlos, schnell, **zuverlässiges
   Tool-Calling**. Diese Wahl ist erarbeitet, nicht geraten: `llama-3.3-70b`
   erzeugt auf Groq zeitweise ein defektes Tool-Call-Format (`tool_use_failed`,
   jede Recherche schlägt fehl); `openai/gpt-oss-120b` ist für den call-schweren
-  Wochenplan zu langsam (mehrere Minuten). Reasoning-Ausgaben (`<think>…`) werden
+  Wochenplan zu langsam (mehrere Minuten); das ab 2026-07-13 genutzte
+  `qwen/qwen3-32b` hat Groq im Juli 2026 zurückgezogen — der erzwungene Wechsel
+  auf den Nachfolger ist als dritter Modell-Drift-Fall dokumentiert
+  ([reflexion_drift](reflexion_drift.md)). Reasoning-Ausgaben (`<think>…`) werden
   vor der Nutzerantwort gefiltert
-  ([app/core/text_utils.py](../app/core/text_utils.py)). Umstellbar über
-  `GROQ_MODEL`.
-- **`parallel_tool_calls=False`** ([orchestrator.py:113](../app/agents/orchestrator.py#L113)):
+  ([app/core/text_utils.py](../app/core/text_utils.py)); zusätzlich ist
+  `reasoning_effort="none"` gesetzt, damit Denk-Tokens nicht das
+  Free-Tier-TPM-Budget verbrauchen. Umstellbar über `GROQ_MODEL`.
+- **`parallel_tool_calls=False`** ([orchestrator.py:150](../app/agents/orchestrator.py#L150)):
   erzwingt EINEN Tool-Aufruf pro Schritt. Sonst batchen Modelle mehrere Tools in
   einen Schritt und umgehen den sequenziellen TAO-Zyklus — der aber der sichtbare
   Kern der Bewertungs-Dimension 2 ist.
+- **Korrektur: Zutaten sind ein Vorrat, keine Checkliste** (Prompt-Regeln 2 und 4,
+  plus Modus-Text in [agent_service.py](../app/core/agent_service.py)). Bei einer
+  langen Zutatenliste (typisch: 10+ Zutaten aus einem Kühlschrank-Foto) hat der
+  Orchestrator die Suchanfrage an `recherche_rezepte` mit der Komplettliste
+  formuliert — ein Rezept, das *alle* verwendet, existiert im Web praktisch nie
+  (reale Rezepte nutzen 5–8 Zutaten), also fand er fälschlich „nichts Passendes".
+  Der Prompt stellt jetzt klar: Die genannten Zutaten sind ein **Vorrat zur
+  Auswahl** — das Rezept darf nur daraus schöpfen (+ Grundzutaten), muss aber
+  nicht alle verwenden (übrige bleiben übrig); für die Websuche wird eine
+  realistische **Teilmenge** gewählt (eine Hauptzutat plus 1–2 passende weitere)
+  statt der Komplettliste. Der STRIKT-Check des Modus „nur vorhandene Zutaten"
+  bleibt unverändert: keine Zutaten außerhalb des Vorrats. **Real verifiziert
+  (2026-08-01):** 14 Foto-typische Zutaten im Modus „vorhanden" → EIN
+  Recherche-Aufruf mit einer 5er-Teilmenge („Haehnchenbrust, Zucchini, Paprika,
+  Feta, Naturjoghurt"), 23 s Laufzeit; die Web-Treffer enthielten Fremdzutaten
+  (Couscous, Reis, Minze), die der Agent transparent zurückwies, um dann ein
+  Gericht rein aus dem Vorrat zusammenzustellen; `einkaufsliste_erstellen` blieb
+  im STRIKT-Modus korrekt aus. Ehrliche Restgrenze: „Paprikapulver (falls
+  vorhanden)" rutschte als weiche Formulierung in die Zutatenliste — die
+  Pool-Grenze ist eine Prompt-Vorgabe, keine Code-Garantie.
 
 ### 2.3 Recherche-Sub-Agent — der einzige echte Sub-Agent
 
@@ -139,8 +164,10 @@ die Architektur ehrlich statt aufgebläht.
   produziert unkontrolliert viel Kontext-Müll. Nährwert-Schätzung, Skalierung,
   Einkaufsliste sind abgeschlossene Einzelschritte ohne eigenen Mehrschritt-Loop —
   ein Sub-Agent wäre dort nur Fassade. Deshalb: ein Sub-Agent, fünf Tools.
-- **Begrenzung:** nur `web_search` als Tool, `recursion_limit=6` — Excessive-
-  Agency-Deckel (VL03), Details in [sicherheit.md](sicherheit.md).
+- **Begrenzung:** nur `web_search` als Tool, `recursion_limit=10` — Excessive-
+  Agency-Deckel (VL03), Details in [sicherheit.md](sicherheit.md). (Ursprünglich 6;
+  nach dem Modellwechsel erhöht, weil `qwen3.6-27b` mehr Zyklen pro Suche braucht
+  und sonst mit „Sorry, need more steps" abbrach — Eval-Befund 2026-08-02.)
 
 ### 2.4 Wochenplan-Workflow — bewusste Korrektur nach gescheitertem Ansatz
 
@@ -287,6 +314,38 @@ Pro-Anfrage-Auswahl die **Tagesform** — dieselbe Auswahl wird aus dem Profil
 vorbelegt und ist frei änderbar. Das Profil ist eine weiche Vorgabe; der Prompt
 fordert zusätzlich aktiv **Abwechslung** ein.
 
+**Korrektur: Profil nicht blind in die Recherche-Suchanfrage einspeisen.** In
+der Praxis hat der Orchestrator die weichen Profil-Schlagworte (`geschmack`,
+`wichtig` — z. B. "orientalisch", "scharf", "proteinreich") auch dann in die
+`anfrage` an `recherche_rezepte` gemischt, wenn der Nutzer bereits konkrete
+Zutaten genannt hatte (z. B. "Hähnchen, Zitrone, Knoblauch"). Das
+überspezifizierte die Websuche des Sub-Agenten, lieferte oft keine Treffer und
+führte zu mehreren überflüssigen Recherche-Aufrufen statt der in Regel 2
+vorgesehenen EINEN Suche — belegt an zwei realen Läufen (~4 Min. Laufzeit statt
+weniger als 1 Min.). Der Orchestrator-Prompt
+([app/agents/orchestrator.py](../app/agents/orchestrator.py), Regeln 2 und 7)
+verlangt jetzt explizit: Profil-Schlagworte fließen nur bei VAGEN Anfragen
+(keine genannten Zutaten/Gerichtsart) in die Suchanfrage; bei bereits konkreten
+Anfragen dienen sie nur zur Auswahl unter mehreren Treffern bzw. zur
+Beschreibung. Zusätzlich soll die Ein-Versuch-Regel jetzt unabhängig vom Antwortformat des
+Sub-Agenten gelten — auch eine unklare, nicht als Fehler-Marker erkannte
+Antwort soll als Fehlschlag zählen (eigenes-Wissen-Fallback statt erneuter
+Suche).
+
+**Real verifiziert (2026-08-01), ehrliches Ergebnis:** Bei der Anfrage mit
+konkreten Zutaten ("Hähnchen, Zitrone, Knoblauch") rief der Orchestrator
+`recherche_rezepte` nur noch **einmal** auf, ganz ohne Profil-Anreicherung —
+Laufzeit 68 s statt zuvor ~240 s. Bei einer bewusst vage formulierten veganen
+Anfrage (nur "veganes Gericht", keine konkrete Zutat/Gerichtsart) stufte der
+Orchestrator sie korrekt als vage ein und reicherte die Suche an — hier rief er
+`recherche_rezepte` trotz Regel 2 aber noch ein **zweites Mal** auf, nachdem der
+erste Versuch keine nutzbare Antwort lieferte (Laufzeit 219 s, kaum verbessert).
+Die Ein-Versuch-Regel ist also eine **Prompt-Vorgabe, keine Code-Garantie** —
+das Modell befolgt sie nicht in 100 % der Fälle. Eine harte Grenze bräuchte
+einen Zähler im Code; das wäre für den agentischen Einzelrezept-Pfad ein
+Rückbau in Richtung starrem Workflow (siehe die bewusste Abwägung "Workflow für
+Struktur, Agent für Inhalt" in § 2.4) und wurde deshalb NICHT umgesetzt.
+
 ### 2.8 Sicherheits-Design (VL03)
 
 Der Recherche-Sub-Agent verarbeitet echte **Web-Inhalte** — Indirect Prompt
@@ -332,8 +391,12 @@ Offline-Testset (**15 Fälle, davon 3 bewusst schwere**, an denen der Agent
 voraussichtlich scheitert — Material für die Reflexion), einen
 **programmatischen, ternären Verifier** (bestanden/neutral/verletzt) auf zwei
 Ebenen — Antwort *und* Trajektorie (wurde `naehrwerte_schaetzen` bei kcal-Vorgabe
-*wirklich* aufgerufen?) — und einen Runner gegen den echten Agenten. Realer Lauf
-(Stand 2026-07-15): **39/45 Checks bestanden (87 %)**, Report mit allen
+*wirklich* aufgerufen?) — und einen Runner gegen den echten Agenten. Realer Lauf (Stand 2026-08-03):
+**35/41 wertbare Checks bestanden (85 %; 4 neutral)**. Die Historie dahinter
+ist selbst ein Messergebnis: 39/45 = 87 % (2026-07-15, `qwen3-32b`) → 32/40 =
+80 % (2026-08-02, nach dem erzwungenen Wechsel auf `qwen3.6-27b`) → 85 % nach
+gezielten Mitigationen (Schrittlimit, Wochenplan-Erkennung) — analysiert in
+[reflexion_drift.md](reflexion_drift.md). Report mit allen
 Einzelergebnissen: [eval_report.md](evidence/eval_report.md), Roh-Traces daneben.
 
 - *Warum kein LLM-as-a-Judge als Haupt-Verifier?* Self-Enhancement-Bias (Judge
@@ -380,7 +443,7 @@ Durcherzählt am **echten Referenz-Lauf (b)** vom 2026-07-15
    Neue Recherche „kalorienarmer Ersatz", dann kcal-Check des Ersatzes:
    **~1400 kcal — schlechter als das Original.** Der Workflow übernimmt einen
    Ersatz nur, wenn er nicht schlechter ist
-   ([wochenplan_workflow.py:260](../app/core/wochenplan_workflow.py#L260)) —
+   ([wochenplan_workflow.py:275](../app/core/wochenplan_workflow.py#L275)) —
    er behält also Gericht 1 und vermerkt ehrlich „trotz Revision über Limit".
 4. **Zyklus 5 — Recherche Gericht 2**, mit explizitem Abwechslungs-Zusatz
    „(anderes Gericht als: Zucchini-Nudeln …)". Observation: „Vegetarischer
@@ -419,7 +482,7 @@ nachprüfbar.
 | Agentic RAG als Tool-Entscheidung (VL7) | `rag_retriever` (BM25 über selbst gelerntes Kochbuch) als Tool; Orchestrator entscheidet situationsabhängig, bei `RAG-LEER` Umformulierung/Websuche | [kochbuch.py](../app/tools/kochbuch.py), Eval-Fall `favoriten_rag` in [eval_report.md](evidence/eval_report.md) |
 | Observability: Traces/Spans (VL7/VL09) | `trace_id` pro Run (ContextVar), Span-Logs mit `span_typ`/`dauer_ms`/`status`, Run-Persistenz als JSON; an OTel-GenAI-Konvention angelehnt | [logging_config.py](../app/core/logging_config.py), [tests/test_trace_schema.py](../tests/test_trace_schema.py) |
 | Tool-Calling-Sicherheit / Lethal Trifecta (VL03) | Trifecta-Analyse, minimale Angriffsfläche, Untrusted-Delimiter, Excessive-Agency-Deckel, Query-Logging, Injection-Test | [sicherheit.md](sicherheit.md), [tests/test_sicherheit.py](../tests/test_sicherheit.py) |
-| Offline-/Trajektorien-Evaluation (VL09) | Festes Testset (15 Fälle), ternärer programmatischer Verifier auf Antwort- **und** Trajektorien-Ebene, Lauf gegen den echten Agenten (39/45 = 87 %) | [evals/](../evals/), [eval_report.md](evidence/eval_report.md) |
+| Offline-/Trajektorien-Evaluation (VL09) | Festes Testset (15 Fälle), ternärer programmatischer Verifier auf Antwort- **und** Trajektorien-Ebene, Lauf gegen den echten Agenten (35/41 wertbare Checks = 85 %, Stand 2026-08-03) | [evals/](../evals/), [eval_report.md](evidence/eval_report.md) |
 | Deployment: API, Container, CI (VL9/13) | FastAPI `/chat` + `/health`, Docker Compose (api+ui), GitHub-Actions-CI mit keyfreien Tests | [app/api/main.py](../app/api/main.py), [docker-compose.yml](../docker-compose.yml), [.github/workflows/ci.yml](../.github/workflows/ci.yml) |
 | Memory/Personalisierung (VL: Agenten-Design) | Dauer-Profil (hart: Ernährung; weich: Geschmack/Prioritäten) + Sterne-Bewertungen, als Kontext injiziert; Schreiben nur deterministisch | [praeferenzen.py](../app/core/praeferenzen.py), Eval-Fälle `vegan_profil`/`memory_schlecht_bewertet` |
 | Drift, Continual Learning, Responsible AI (Reflexions-VLs) | Eigene Reflexionen auf die Rezept-Domäne übertragen; Continual Learning zusätzlich implementiert (Bewertung → Kochbuch) | [reflexion_drift.md](reflexion_drift.md), [reflexion_continual.md](reflexion_continual.md), [reflexion_responsible_ai.md](reflexion_responsible_ai.md) |
@@ -439,8 +502,12 @@ Ehrlich und konkret — je mit dem Schritt, der production-tauglich anders wäre
    Lebensmittel-Ontologie + Einheiten-Arithmetik.
 3. **Verifier-Lücken (belegt in der Eval).** Die Checks sind String-/Trace-
    Heuristiken: Der belegte False Positive `memory_schlecht_bewertet` (Erwähnung ≠
-   Empfehlung) bleibt bewusst „rot" stehen, statt den Check weichzuspülen; zudem
-   besteht Reward-Hacking-Gefahr (kcal-Angaben weglassen → neutral). Details:
+   Empfehlung) bleibt bewusst „rot" stehen, statt den Check weichzuspülen — auch
+   die Re-Runs 2026-08-02/03 werteten die transparente Meidung (aktuell: „du
+   Kürbissuppe eher meidest" vor einem Tomatensuppen-Vorschlag) als Verstoß;
+   zudem besteht Reward-Hacking-Gefahr (kcal-Angaben
+   weglassen → neutral) — in den Re-Runs real eingetreten: `schwer_kombi_constraints`
+   lieferte eine Antwort ganz ohne kcal-Zahlen, der Limit-Check fiel auf „neutral". Details:
    [evals/README.md](../evals/README.md). *Production:* größeres Testset,
    Zutaten-Lexikon statt Wortlisten, LLM-Judge höchstens als Zweitmeinung mit
    menschlicher Stichprobe.
@@ -468,8 +535,14 @@ Ehrlich und konkret — je mit dem Schritt, der production-tauglich anders wäre
 8. **Prompt-Regeln sind Leitplanken, keine Garantien.** Der Orchestrator-Prompt
    formuliert harte Regeln („NIEMALS selbst im Kopf rechnen", Regel 2b:
    `rag_retriever` nur bei Bezug auf Bewährtes) — ihre Befolgung bleibt aber
-   Modellverhalten. Belegt: Im Eval verletzt `schwer_skalierung_kette` Regel 6
-   (Skalierung „im Kopf" statt per Tool, [eval_report.md](evidence/eval_report.md));
+   Modellverhalten. Belegt, inklusive Modellabhängigkeit: Im Eval-Lauf 2026-07-15
+   (`qwen3-32b`) verletzte `schwer_skalierung_kette` Regel 6 (Skalierung „im
+   Kopf" statt per Tool); der Nachfolger `qwen3.6-27b` hielt genau diese Regel im
+   Re-Run 2026-08-02 ein, ließ dafür in `leere_suche_fallback` die vorgesehene
+   Recherche komplett aus; nach einer expliziten Recherche-Pflicht im Prompt lief
+   die Suche (2026-08-03), dafür fehlte nun die geforderte Transparenz-Angabe
+   („nicht aus der Websuche") — *welche* Prompt-Regel reißt, wechselt mit dem
+   Modell ([eval_report.md](evidence/eval_report.md));
    in einem manuellen CLI-Lauf (2026-07-16, nicht als Trace persistiert) lief
    `rag_retriever` entgegen Regel 2b bei einer normalen Anfrage und die Antwort
    vermischte Kochbuch- und Web-Treffer (Titel des einen, Zutaten des anderen).
@@ -493,18 +566,23 @@ beschönigt:
 2. **Verifier und Eval früher bauen — vor den Datenmodellen, nicht danach.**
    Der Fall `schwer_kcal_tagessumme` deckte auf, dass `erkenne_wochenplan` nur
    „kcal **pro Portion**" ausdrücken kann und ein Tages-Summen-Budget stillschweigend
-   fehlinterpretiert ([eval_report.md](evidence/eval_report.md)). Hätte das
+   fehlinterpretiert ([eval_report.md](evidence/eval_report.md)); im Re-Run
+   2026-08-02 stufte der Modell-Nachfolger dieselbe Anfrage gar nicht erst als
+   Mehr-Mahlzeiten-Plan ein — die fehlende Summen-Semantik im Schema bleibt der
+   Kern des Problems. Hätte das
    Testset vor dem Workflow-Parameter-Schema existiert, hätte das Schema
    Summen-Constraints von Anfang an vorgesehen — so war es ein nachträglich
    entdeckter Designfehler.
 3. **Constraint-Durchsetzung konsequenter in den Code statt in den Prompt —
    auch im Einzelrezept-Pfad.** Die Lektion des Wochenplaners („Workflow für die
    Struktur", § 2.4) haben wir nur dort angewendet. Der Fall
-   `schwer_skalierung_kette` zeigt die Folge: Trotz expliziter Prompt-Regel 6
-   („Rechne Mengen NIEMALS selbst im Kopf") skalierte der Agent die Mengen
-   selbst — `portionen_skalieren` lief 0×. Eine Antwort-Validierung (wurde bei
-   Personenzahl-Vorgabe das Tool aufgerufen?) mit einem Korrektur-Schritt hätte
-   das strukturell verhindert statt es nur zu erbitten.
+   `schwer_skalierung_kette` zeigte die Folge im Lauf vom 2026-07-15: Trotz
+   expliziter Prompt-Regel 6 („Rechne Mengen NIEMALS selbst im Kopf") skalierte
+   der Agent die Mengen selbst — `portionen_skalieren` lief 0×. Im Re-Run
+   2026-08-02 befolgte der Modell-Nachfolger die Regel — Prompt-Befolgung ist
+   also modellabhängig, eine Antwort-Validierung (wurde bei Personenzahl-Vorgabe
+   das Tool aufgerufen?) mit einem Korrektur-Schritt wäre es nicht und hätte das
+   strukturell verhindert statt es nur zu erbitten.
 4. **Modellwechsel als Normalfall einplanen statt als Störung erleben.** Zwei
    erzwungene Wechsel (defektes Tool-Calling bei `llama-3.3-70b`, deprecatete
    Vision-Modelle) trafen ein System, dessen Prompts, `<think>`-Filter und

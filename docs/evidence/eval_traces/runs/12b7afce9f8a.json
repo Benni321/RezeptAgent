@@ -1,27 +1,11 @@
 {
-  "id": "wochenplan_3_kcal",
-  "beschreibung": "Planungsfall: 3 Gerichte, kcal-Limit, vegetarisches Profil. Trajektorie muss die plan->pruefe->revidiere-Schleife zeigen: je Gericht Recherche + Naehrwert-Check, genau ein deterministischer Abschluss.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Plane mir 3 unterschiedliche Abendessen fuer die Woche, maximal 500 kcal pro Portion, fuer 2 Personen.",
-    "modus": "einkaufsliste"
-  },
-  "profil": {
-    "ernaehrung": [
-      "vegetarisch"
-    ],
-    "geschmack": [],
-    "wichtig": [],
-    "bewertungen": {}
-  },
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-03",
-  "fehler": null,
   "trace_id": "12b7afce9f8a",
+  "zeit_start": "2026-08-03T09:25:29",
+  "dauer_ms": 188052,
+  "eingabe": "Plane mir 3 unterschiedliche Abendessen fuer die Woche, maximal 500 kcal pro Portion, fuer 2 Personen.",
+  "modus": "einkaufsliste",
   "antwort": "Ich konnte leider keine passenden Rezepte fuer den Wochenplan finden.",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -86,39 +70,5 @@
       "dauer_ms": 0,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: 3x aufgerufen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "verletzt",
-      "detail": "naehrwerte_schaetzen: 0x aufgerufen, erwartet >= 3"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "wochenplan_zusammenstellen: 1x aufgerufen"
-    },
-    {
-      "typ": "revision_geprueft",
-      "status": "neutral",
-      "detail": "kein Gericht ueber dem Limit -> keine Revision noetig"
-    },
-    {
-      "typ": "kcal_limit",
-      "status": "neutral",
-      "detail": "keine kcal-Angabe in der Antwort gefunden"
-    },
-    {
-      "typ": "schrittzahl",
-      "status": "verletzt",
-      "detail": "4 Aktionen, erwartet 7-40"
-    }
-  ],
-  "fall_status": "verletzt",
-  "dauer_s": 188.1
+  ]
 }

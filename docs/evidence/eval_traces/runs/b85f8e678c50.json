@@ -1,20 +1,11 @@
 {
-  "id": "wochenplan_ohne_kcal",
-  "beschreibung": "Planungsfall ohne kcal-Vorgabe: situationsabhaengiger Pfad - der Naehrwert-Check darf NICHT laufen (kein Constraint -> kein Check), Abwechslung ueber zwei Recherchen.",
-  "erwartet_schwer": false,
-  "warum_schwer": null,
-  "eingabe": {
-    "nachricht": "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur mit Gemuese.",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-03",
-  "fehler": null,
   "trace_id": "b85f8e678c50",
+  "zeit_start": "2026-08-03T09:26:54",
+  "dauer_ms": 65559,
+  "eingabe": "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur mit Gemuese.",
+  "modus": "einkaufsliste",
   "antwort": "Wochenplan:\n\n1. Lachs-Sahne-Gratin aus dem Ofen\n   Zutaten: Lachsfilets, Sahne, Zwiebeln, Petersilie, Salz, Pfeffer, Zitronensaft\n   Hinweis: Geschätzte Kalorien (Näherung ohne verifizierte DB)\n\n2. Meditaner Fisch mit Gemüse\n   Zutaten: Weißes Fischfilet, Zwiebeln, Paprika, Zucchini, Weißwein, Gemüsebrühe, frisches Basilikum, Olivenöl, Butter\n   Hinweis: Geschätzte Kalorien (Näherung ohne verifizierte DB)\n\nGesamt-Einkaufsliste (fehlende Zutaten fuer alle Gerichte):\n- Lachsfilets\n- Sahne\n- Zwiebeln\n- Petersilie\n- Salz\n- Pfeffer\n- Zitronensaft\n- Weißes Fischfilet\n- Paprika\n- Zucchini\n- Weißwein\n- Gemüsebrühe\n- frisches Basilikum\n- Olivenöl\n- Butter",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -63,24 +54,5 @@
       "dauer_ms": 2,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "recherche_rezepte: 2x aufgerufen"
-    },
-    {
-      "typ": "tool_nicht_aufgerufen",
-      "status": "bestanden",
-      "detail": "naehrwerte_schaetzen: nicht aufgerufen"
-    },
-    {
-      "typ": "tool_aufgerufen",
-      "status": "bestanden",
-      "detail": "wochenplan_zusammenstellen: 1x aufgerufen"
-    }
-  ],
-  "fall_status": "bestanden",
-  "dauer_s": 65.6
+  ]
 }

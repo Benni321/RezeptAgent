@@ -109,12 +109,26 @@ def erkenne_wochenplan(nachricht: str, model: ChatGroq | None = None) -> dict | 
     if not _WOCHENPLAN_HINWEISE.search(nachricht or ""):
         return None
     model = model or _modell()
+    # Beispiele im Prompt: Der Modell-Nachfolger (qwen3.6-27b) stufte reale
+    # Plan-Anfragen ohne das Wort "Wochenplan" als wochenplan=false ein
+    # (Eval 2026-08-02: wochenplan_ohne_kcal, schwer_kcal_tagessumme) -- die
+    # Beispiele ankern die Entscheidung. Mehrere Mahlzeiten fuer EINEN Tag
+    # zaehlen ausdruecklich als Plan; die bekannte Grenze "Summen-kcal-Budget
+    # nicht abbildbar" (PROJEKTDOKU Paragraf 6.2) bleibt bewusst bestehen.
     prompt = (
         "Analysiere die folgende Kochanfrage. Geht es um MEHRERE Gerichte / einen "
         "Wochen- oder Mehr-Tages-Plan? Antworte AUSSCHLIESSLICH mit JSON:\n"
         '{"wochenplan": true/false, "anzahl_gerichte": <ganze Zahl>, '
         '"kcal_limit": <Zahl pro Portion oder null>, "portionen": <Zahl oder null>}\n'
-        "Setze wochenplan=false, wenn nur EIN Gericht gewuenscht ist.\n\n"
+        "Setze wochenplan=false, wenn nur EIN Gericht gewuenscht ist. Mehrere "
+        "Mahlzeiten fuer EINEN Tag (z. B. Fruehstueck, Mittag, Abend) zaehlen "
+        "ebenfalls als Plan.\n"
+        "Beispiele:\n"
+        '- "Plane mir 2 Abendessen fuer die Woche, eins mit Fisch und eins nur '
+        'mit Gemuese." -> {"wochenplan": true, "anzahl_gerichte": 2, ...}\n'
+        '- "Plane mir 3 Mahlzeiten fuer einen Tag (Fruehstueck, Mittag, Abend)." '
+        '-> {"wochenplan": true, "anzahl_gerichte": 3, ...}\n'
+        '- "Was koche ich heute Abend?" -> {"wochenplan": false, ...}\n\n'
         f"Anfrage: {nachricht}"
     )
     daten = _json_aus_text(model.invoke([HumanMessage(content=prompt)]).content)

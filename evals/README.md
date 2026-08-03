@@ -49,7 +49,10 @@ Prüfung:
   Der `erwaehnt_nicht`-Check wertet die bloße Erwähnung trotzdem als Verstoß
   (siehe `docs/evidence/eval_traces/memory_schlecht_bewertet.json`). String-Match
   kann Erwähnung nicht von Empfehlung unterscheiden; genau dafür braucht es die
-  menschliche Durchsicht der Traces. Wir lassen den Fall bewusst „rot“ stehen,
+  menschliche Durchsicht der Traces. Die Re-Runs 2026-08-02/03 (`qwen3.6-27b`)
+  reproduzierten exakt dieselbe Fehlwertung (aktueller Trace: „du Kürbissuppe
+  eher meidest“ vor einem Tomatensuppen-Vorschlag → als Verstoß gezählt).
+  Wir lassen den Fall bewusst „rot“ stehen,
   statt den Check weichzuspülen — ein Verifier, den man nachträglich an die
   Agent-Ausgaben anpasst, misst nichts mehr.
 - **kcal-Check liest nur, was dasteht.** Er extrahiert Zahlen vor „kcal“ aus der

@@ -1,20 +1,11 @@
 {
-  "id": "schwer_kcal_tagessumme",
-  "beschreibung": "SCHWERER FALL: Tages-SUMMEN-Constraint (3 Mahlzeiten zusammen max 1200 kcal) statt Pro-Portion-Limit. Der Workflow kennt nur Pro-Portion-Limits - die Summen-Semantik wird voraussichtlich falsch behandelt.",
-  "erwartet_schwer": true,
-  "warum_schwer": "erkenne_wochenplan extrahiert 'kcal_limit pro Portion'; ein Summen-Budget ueber mehrere Mahlzeiten kann es nicht ausdruecken. Erwartung: das Limit wird als 1200/Portion fehlinterpretiert oder ignoriert.",
-  "eingabe": {
-    "nachricht": "Plane mir 3 Mahlzeiten fuer einen Tag (Fruehstueck, Mittag, Abend), die zusammen hoechstens 1200 kcal pro Person haben. Fuer 2 Personen.",
-    "modus": "einkaufsliste"
-  },
-  "profil": null,
-  "kochbuch": null,
-  "modell": "qwen/qwen3.6-27b",
-  "datum": "2026-08-03",
-  "fehler": null,
   "trace_id": "b36bec7fceb7",
+  "zeit_start": "2026-08-03T09:52:41",
+  "dauer_ms": 187736,
+  "eingabe": "Plane mir 3 Mahlzeiten fuer einen Tag (Fruehstueck, Mittag, Abend), die zusammen hoechstens 1200 kcal pro Person haben. Fuer 2 Personen.",
+  "modus": "einkaufsliste",
   "antwort": "**Wochenplan**\n\n1. **Beeren-Quinoa-Joghurt-Bowl**\n   *Zutaten:* 200 g Magerquark oder Griechischer Joghurt (0–2 % Fett), 50 g Quinoa (gekocht) oder Haferflocken, 100 g Beeren (frisch oder tiefgekühlt, z. B. Himbeeren, Blaubeeren), 1 EL Chiasamen oder Leinsamen, Optional: etwas Zitrone oder Honig zum Süßen.\n   *Kalorien:* ~172 kcal/Portion (unter Limit).\n\n2. **Blumenkohl-Apfel-Salat mit gerösteten Kichererbsen**\n   *Zutaten:* Blumenkohl, Apfel, Kichererbsen (Dose), Kreuzkümmel, Zimt, Nelken, etwas Öl, Zitronensaft.\n   *Kalorien:* ~340 kcal/Portion (unter Limit).\n\n**Einkaufsliste**\n\n*   200 g Magerquark oder Griechischer Joghurt (0–2 % Fett)\n*   Blumenkohl\n*   Apfel\n*   Kichererbsen (Dose)\n*   Kreuzkümmel\n*   Zimt\n*   Nelken\n*   etwas Öl\n*   Zitronensaft",
-  "trace": [
+  "schritte": [
     {
       "art": "aktion",
       "ziel": "Sub-Agent",
@@ -113,19 +104,5 @@
       "dauer_ms": 1,
       "status": "ok"
     }
-  ],
-  "checks": [
-    {
-      "typ": "tool_aufgerufen",
-      "status": "verletzt",
-      "detail": "naehrwerte_schaetzen: 2x aufgerufen, erwartet >= 3"
-    },
-    {
-      "typ": "kcal_summe_limit",
-      "status": "bestanden",
-      "detail": "Summe 512 <= 1200"
-    }
-  ],
-  "fall_status": "verletzt",
-  "dauer_s": 187.7
+  ]
 }

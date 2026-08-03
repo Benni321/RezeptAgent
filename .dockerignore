@@ -1,0 +1,15 @@
+# Haelt Build-Kontext und Image klein und SAUBER (W7):
+# - .env darf NIE ins Image gebacken werden (Keys gehoeren zur Laufzeit via
+#   env_file in docker-compose.yml, nicht ins Dateisystem des Images).
+# - .venv/.git blaehten das Image zuvor auf 3,6 GB auf.
+.git
+.venv
+venv
+.env
+**/__pycache__
+.pytest_cache
+.claude
+**/.DS_Store
+docs/Bisherige Vorlesungsinhalte/
+*.pdf
+data/praeferenzen.json
