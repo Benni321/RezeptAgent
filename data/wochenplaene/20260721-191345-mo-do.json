@@ -1,0 +1,64 @@
+{
+  "id": "20260721-191345-mo-do",
+  "titel": "Mo-Do",
+  "erstellt_am": "2026-07-21T19:13:45",
+  "nachricht": "Manuell aus dem Kochbuch zusammengestellt.",
+  "antwort": "Wochenplan:\n1. Gemüse-Curry mit Kokosmilch\n2. Japanisches Rinderhack-Gemüse mit Reis und Yakisoba-Nudeln\n3. Linsen-Dal\n4. Kichererbsen-Salat mit Feta\n\nGesamt-Einkaufsliste (fehlende Zutaten fuer alle Gerichte):\n- 2 Süßkartoffeln\n- 1 Brokkoli\n- 400ml Kokosmilch\n- 2 EL rote Currypaste\n- 1 Zucchini\n- 100 g Karotten\n- 2 Frühlingszwiebeln\n- 1 Stück Ingwer (ca. 2 cm)\n- 3 EL Sojasauce (glutenfrei, falls gewünscht)\n- 1 EL Sesamöl\n- 1 TL Sesamsamen\n- Öl zum Braten\n- Salz und Pfeffer\n- 400g gehackte Tomaten\n- 1 TL Kurkuma\n- 1 TL Kreuzkümmel\n- 400g Kichererbsen\n- 1 Gurke\n- 200g Cherrytomaten\n- 150g Feta\n- Zitronensaft\n- Olivenöl",
+  "gerichte": [
+    {
+      "titel": "Gemüse-Curry mit Kokosmilch",
+      "zutaten": [
+        "2 Süßkartoffeln",
+        "1 Brokkoli",
+        "400ml Kokosmilch",
+        "2 EL rote Currypaste",
+        "200g Reis",
+        "1 Zwiebel"
+      ]
+    },
+    {
+      "titel": "Japanisches Rinderhack-Gemüse mit Reis und Yakisoba-Nudeln",
+      "zutaten": [
+        "400 g Rinderhackfleisch",
+        "200 g Reis (z. B. Basmati oder Jasmin)",
+        "200 g Yakisoba-Nudeln (oder normale Soba-/Weizennudeln)",
+        "1 rote Paprika",
+        "1 Zucchini",
+        "100 g Karotten",
+        "2 Frühlingszwiebeln",
+        "2 Knoblauchzehen",
+        "1 Stück Ingwer (ca. 2 cm)",
+        "3 EL Sojasauce (glutenfrei, falls gewünscht)",
+        "1 EL Sesamöl",
+        "1 TL Sesamsamen",
+        "Öl zum Braten",
+        "Salz und Pfeffer"
+      ]
+    },
+    {
+      "titel": "Linsen-Dal",
+      "zutaten": [
+        "250g rote Linsen",
+        "1 Zwiebel",
+        "2 Knoblauchzehen",
+        "1 Stück Ingwer",
+        "400g gehackte Tomaten",
+        "1 TL Kurkuma",
+        "1 TL Kreuzkümmel"
+      ]
+    },
+    {
+      "titel": "Kichererbsen-Salat mit Feta",
+      "zutaten": [
+        "400g Kichererbsen",
+        "1 Gurke",
+        "200g Cherrytomaten",
+        "150g Feta",
+        "1 rote Zwiebel",
+        "Zitronensaft",
+        "Olivenöl"
+      ]
+    }
+  ],
+  "anzahl_gerichte": 4
+}

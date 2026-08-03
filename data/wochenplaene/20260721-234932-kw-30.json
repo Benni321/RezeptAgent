@@ -1,0 +1,40 @@
+{
+  "id": "20260721-234932-kw-30",
+  "titel": "KW 30",
+  "erstellt_am": "2026-07-21T23:49:32",
+  "nachricht": "Mach mir für 4 Tage einen Essenplan, neben den Sachen im Kühlschrank habe ich noch Rinderhackfleishc, Reis und Nudeln",
+  "antwort": "Wochenplan:\n\n1. BBQ-Cheeseburger (Hackfleisch, Käse, BBQ-Sauce, Brötchen) – ca. 600 kcal\n2. Eier mit Käse und Paprika (Eier, Käse, Paprika) – ca. 350 kcal\n3. Spaghetti Bolognese (Rinderhackfleisch, Spaghetti, Tomatensoße) – ca. 550 kcal\n\nHinweis: Nur 3 von 4 gewünschten Gerichten konnten geplant werden. Für das vierte Gericht wurde kein passendes Rezept gefunden.\n\nEinkaufsliste:\n- Hackfleisch\n- Käse\n- BBQ-Sauce\n- Brötchen\n- Eier\n- Paprika\n- Rinderhackfleisch\n- Spaghetti\n- Tomatensoße",
+  "gerichte": [
+    {
+      "titel": "BBQ-Cheeseburger",
+      "zutaten": [
+        "Hackfleisch",
+        "Käse",
+        "BBQ-Sauce",
+        "Brötchen"
+      ],
+      "zubereitung": []
+    },
+    {
+      "titel": "Eier mit Käse und Paprika",
+      "zutaten": [
+        "Eier",
+        "Käse",
+        "Paprika"
+      ],
+      "zubereitung": [
+        "Eier mit Käse und Paprika in einer Pfanne anbraten"
+      ]
+    },
+    {
+      "titel": "Spaghetti Bolognese",
+      "zutaten": [
+        "Rinderhackfleisch",
+        "Spaghetti",
+        "Tomatensoße"
+      ],
+      "zubereitung": []
+    }
+  ],
+  "anzahl_gerichte": 3
+}
