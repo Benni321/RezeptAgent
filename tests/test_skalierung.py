@@ -42,3 +42,14 @@ def test_tool_schuetzt_gegen_null_portionen():
         {"zutaten": ["100g Mehl"], "von_portionen": 0, "auf_portionen": 3}
     )
     assert "300g Mehl" in ergebnis
+
+
+def test_bruch_mit_nenner_null_bricht_nicht_ab():
+    # Regression: "1/0 TL" loeste einen ZeroDivisionError aus und riss damit den
+    # ganzen Agentenlauf ab -- ein Tool darf aber nie werfen (Fehler werden zur
+    # Entscheidung, nicht zum Absturz). Die Zutat bleibt unveraendert stehen.
+    ergebnis = portionen_skalieren.invoke(
+        {"zutaten": ["1/0 TL Salz", "200g Reis"], "von_portionen": 2, "auf_portionen": 4}
+    )
+    assert "1/0 TL Salz" in ergebnis   # unveraendert durchgereicht
+    assert "400g Reis" in ergebnis     # die gueltige Zutat wird normal skaliert

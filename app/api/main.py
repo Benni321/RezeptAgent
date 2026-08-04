@@ -23,7 +23,7 @@ from pydantic import ValidationError
 
 from app.api.schemas import (
     ChatAnfrage, ChatAntwort, ERLAUBTE_BILDTYPEN, KochbuchRezeptSpeichern,
-    WochenplanAusKochbuch, WochenplanSpeichern,
+    MAX_BILD_BYTES, WochenplanAusKochbuch, WochenplanSpeichern,
 )
 from app.core.agent_service import run_rezept_agent
 from app.core.logging_config import get_logger, log_ereignis
@@ -89,6 +89,12 @@ def chat(
                 detail=f"Nicht unterstuetzter Bildtyp: {bild.content_type}. Erlaubt: {sorted(ERLAUBTE_BILDTYPEN)}",
             )
         image_bytes = bild.file.read()  # synchrone Route -> synchrones Lesen (kein await)
+        if len(image_bytes) > MAX_BILD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Das Bild ist zu gross ({len(image_bytes) // 1024 // 1024} MB). "
+                       f"Maximal erlaubt: {MAX_BILD_BYTES // 1024 // 1024} MB.",
+            )
         try:
             Image.open(io.BytesIO(image_bytes)).verify()
         except (UnidentifiedImageError, OSError):

@@ -36,19 +36,32 @@ lief gar nicht (0× statt ≥ 3×). Der Re-Run nach dem erzwungenen Modellwechse
 Kombi-Anfrage lieferte eine Antwort ganz **ohne** kcal-Zahlen (Checks nur noch
 „neutral" — das in [evals/README](../evals/README.md) beschriebene
 Reward-Hacking-Schlupfloch, real eingetreten), und die Summen-Anfrage wurde gar
-nicht erst als Mehr-Mahlzeiten-Plan erkannt. Für Komfort-Nutzer ist das ein
+nicht erst als Mehr-Mahlzeiten-Plan erkannt. **Nachtrag 2026-08-03:** Nach
+Beispielen in der Wochenplan-Erkennung greift die Summen-Anfrage wieder — der
+Plan wird erkannt und die Tagessumme (512 kcal) bleibt unter dem Budget von
+1200. Das Reward-Hacking-Schlupfloch bei `schwer_kombi_constraints` besteht
+dagegen weiter. Die Lehre bleibt: Was *genau* bricht, wandert mit dem Modell;
+dass etwas bricht, ist der Normalfall. Für Komfort-Nutzer ist das ein
 Schönheitsfehler; für jemanden,
 der aus medizinischen Gründen zählt (Diabetes, Adipositas-Therapie), wäre
 dieselbe Ausgabe schädlich. Wir kennzeichnen die Werte konsequent als
 Schätzungen — aber wir wissen aus dem eigenen Eval, dass Nutzer im Grenzfall
 falsche Zahlen mit korrektem Disclaimer bekommen.
 
-**3. Halluzination bei der Bildanalyse (VLM) — mitigiert durch Design.** Die
-Zutatenerkennung kann falsch liegen. Umgesetzte Gegenmaßnahme: Die erkannten
-Zutaten werden dem Nutzer in der GUI **zur Bestätigung** angezeigt, bevor der
-Agent damit arbeitet (**Human-in-the-Loop**); ein Vision-Fehler degradiert zu
-„ohne Foto-Zutaten weiterarbeiten" statt falsche Zutaten still zu übernehmen
-([agent_service.py](../app/core/agent_service.py)).
+**3. Halluzination bei der Bildanalyse (VLM) — nur teilweise mitigiert.** Die
+Zutatenerkennung kann falsch liegen. Umgesetzt ist **Transparenz**: Die
+erkannten Zutaten stehen sichtbar über der Antwort („Aus dem Foto erkannt: …",
+[seiten/rezept_finden.py](../seiten/rezept_finden.py)), sodass eine
+Fehlerkennung erkennbar ist und die Anfrage korrigiert wiederholt werden kann;
+ein Vision-Fehler degradiert zu „ohne Foto-Zutaten weiterarbeiten" statt falsche
+Zutaten still zu übernehmen ([agent_service.py](../app/core/agent_service.py)).
+**Selbstkritisch:** Das ist *kein* Human-in-the-Loop im Sinne der Vorlesung — die
+Anzeige erfolgt **nach** dem Lauf, nicht als Freigabe davor. Für Rezeptvorschläge
+(keine destruktive Aktion, kein Geld, keine Daten nach außen außer dem Foto
+selbst) halten wir das für vertretbar; bei einem System, das auf Basis der
+erkannten Zutaten *bestellen* würde, wäre es fahrlässig. Der Ausbauschritt steht
+in [PROJEKTDOKU § 5](PROJEKTDOKU.md#5-grenzen-des-systems): zweistufiger Flow mit
+editierbarer Bestätigung.
 
 **4. Küchen-Bias — auch in unserem eigenen Testset.** Websuche und Modell sind
 auf westliche/deutschsprachige Küche ausgerichtet; wer anders kocht, bekommt
@@ -66,9 +79,10 @@ Bias-Ausgangspunkt vorschlägt, wird das Memory bevorzugen. Die Seed-Rezepte
 VLM (Groq)** und können Unbeabsichtigtes enthalten (Personen im Hintergrund,
 Adressen auf Lieferscheinen). Wir speichern Bilder nicht dauerhaft und
 verarbeiten sie nur im Request; seit 2026-07-16 weist die GUI direkt beim
-Upload-Feld auf den externen Versand hin ([streamlit_app.py](../streamlit_app.py))
-— zuvor stand das nur in der Doku (die damalige Lücke haben wir geschlossen,
-weil ein Hinweis, den niemand vor dem Upload sieht, keine Transparenz ist).
+Upload-Feld auf den externen Versand hin
+([seiten/rezept_finden.py](../seiten/rezept_finden.py)) — zuvor stand das nur in
+der Doku (die damalige Lücke haben wir geschlossen, weil ein Hinweis, den niemand
+vor dem Upload sieht, keine Transparenz ist).
 Verbleibende Grenze: Der Versand selbst bleibt; für sensible Kontexte wäre ein
 lokales VLM der richtige Schritt — im Kostenlos-Stack dieses Projekts war es
 keine Option.

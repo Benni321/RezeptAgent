@@ -84,3 +84,41 @@ def test_vision_fehler_wird_graceful_abgefangen(monkeypatch, tmp_path):
 
     ergebnis = svc.run_rezept_agent(nachricht="Was kann ich kochen?", image_bytes=b"kaputt")
     assert ergebnis["erkannte_zutaten"] == []  # graceful: kein Absturz, leere Liste
+
+
+def test_vision_llm_fehler_gibt_leere_liste_statt_exception(monkeypatch):
+    # erkenne_zutaten_aus_bild faengt den LLM-Aufruf selbst ab (nicht erst der
+    # agent_service). Wichtig fuer Direktaufrufe, z. B. aus den Evidence-Skripten:
+    # dort gibt es keinen umgebenden try/except.
+    from app.tools import vision
+
+    class KaputtesModell:
+        def invoke(self, *_a, **_k):
+            raise RuntimeError("Groq nicht erreichbar")
+
+    monkeypatch.setattr(vision, "ChatGroq", lambda **_kw: KaputtesModell())
+    assert vision.erkenne_zutaten_aus_bild(b"egal", "image/jpeg") == []
+
+
+# --- Trace-Lebenszyklus: keine trace_id-Leaks nach einer Exception ---------------
+
+def test_trace_wird_auch_bei_exception_beendet(monkeypatch, tmp_path):
+    # Ohne try/finally bliebe die trace_id in der ContextVar stehen und haftete an
+    # den Logs des NAECHSTEN Requests im selben Thread -- die Observability (W5)
+    # waere ausgerechnet im Fehlerfall unbrauchbar.
+    from app.core import logging_config
+
+    monkeypatch.setattr(svc.praeferenzen, "_DEFAULT_PFAD", str(tmp_path / "p.json"))
+
+    class ExplodierenderOrchestrator:
+        def stream(self, *a, **k):
+            raise RuntimeError("Modell nicht erreichbar")
+
+    monkeypatch.setattr(svc, "create_orchestrator", lambda: ExplodierenderOrchestrator())
+
+    try:
+        svc.run_rezept_agent(nachricht="Was kann ich kochen?")
+    except RuntimeError:
+        pass  # Fehler wird bewusst nach aussen gereicht (API macht daraus 502)
+
+    assert logging_config.aktuelle_trace_id() is None

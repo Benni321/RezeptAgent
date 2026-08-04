@@ -23,7 +23,7 @@ handgeschrieben „behauptet“ — die Traces sind Rohdaten der Observability-S
 | **W2** Multimodale Eingabe | [vision_nachweis.md](vision_nachweis.md) + [kuehlschrank_foto.jpg](kuehlschrank_foto.jpg) | Echtes Kühlschrank-Foto → vom Groq-VLM erkannte Zutatenliste → daraus entstandener Rezeptvorschlag, ein durchgehender Lauf. |
 | **W3/W4** RAG + Agentic RAG | [eval_report.md](eval_report.md), Fall `favoriten_rag` + [eval_traces/favoriten_rag.json](eval_traces/favoriten_rag.json) | Realer Lauf: Bei Bezug auf Favoriten ruft der Agent `rag_retriever` (Kochbuch, BM25) VOR jeder Websuche auf — per `tool_reihenfolge`-Check verifiziert. |
 | **W5** Observability | beliebiger Roh-Trace in [traces/](traces/) oder [eval_traces/runs/](eval_traces/runs/) | Jeder Lauf ist eine zusammenhängende JSON-Datei mit `trace_id` und Span-Feldern (`dauer_ms`, `status`) über alle Schritte. |
-| **W8** Automatisierte Tests | `pytest -q` (115 grün, ohne API-Keys), CI: `.github/workflows/ci.yml` | Die Testsuite läuft offline; die Eval-Verifier-Logik ist zusätzlich separat getestet. |
+| **W8** Automatisierte Tests | `pytest -q` (163 grün, ohne API-Keys), CI: `.github/workflows/ci.yml` | Die Testsuite läuft offline; die Eval-Verifier-Logik ist zusätzlich separat getestet. |
 | **W9** Fehlerbehandlung | [referenz_traces.md](referenz_traces.md) (c) + `tests/test_fehlerhandling.py` | Realer Fallback-Lauf (leere Suche → eigenes Wissen, transparent gekennzeichnet), deterministisch abgesichert in den Tests. |
 | **W12–W14** Reflexionen | [../reflexion_drift.md](../reflexion_drift.md), [../reflexion_continual.md](../reflexion_continual.md), [../reflexion_responsible_ai.md](../reflexion_responsible_ai.md) | Konzept-/Reflexionsdokumente (kein Lauf-Nachweis nötig). |
 

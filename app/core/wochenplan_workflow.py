@@ -30,7 +30,7 @@ from langchain_groq import ChatGroq
 
 from app.agents.recherche_agent import recherche_rezepte
 from app.core.logging_config import get_logger, log_span
-from app.core.text_utils import entferne_reasoning
+from app.core.text_utils import entferne_reasoning, json_objekt_aus_text
 from app.tools.naehrwerte import schaetze_kcal_pro_portion
 from app.tools.wochenplan import wochenplan_zusammenstellen
 
@@ -77,7 +77,7 @@ _WOCHENPLAN_HINWEISE = re.compile(
 
 def _modell(temperature: float = 0) -> ChatGroq:
     return ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=temperature,
         max_retries=5,
     )
@@ -86,24 +86,11 @@ def _modell(temperature: float = 0) -> ChatGroq:
 def _json_aus_text(text: str) -> dict | None:
     """Zieht das erste JSON-Objekt aus einer Modellantwort (robust gegen Beiwerk).
 
-    Entfernt zuerst <think>-Bloecke (qwen3): deren geschweifte Klammern wuerden den
-    Parser sonst auf das falsche Objekt fuehren. Zusaetzlich robust gegen zwei
-    haeufige Modell-Marotten, die reines json.loads() sonst scheitern lassen:
-    Markdown-Codefences (```json ... ```) und ueberzaehlige Kommas vor der
-    schliessenden Klammer ("... "b",]"). Ohne diese Toleranz schlug die Extraktion
-    real haeufiger fehl, als die Suche selbst rechtfertigte.
+    Duenner Alias auf den gemeinsamen Helfer in text_utils -- dieselbe Logik
+    braucht auch die Naehrwert-Schaetzung, und beide litten zuvor unter demselben
+    Bug (gieriges `\\{.*\\}` matchte ueber angehaengte Erklaerungen hinweg).
     """
-    bereinigt = entferne_reasoning(text or "")
-    bereinigt = re.sub(r"```(?:json)?\s*|\s*```", "", bereinigt)
-    treffer = re.search(r"\{.*\}", bereinigt, re.DOTALL)
-    if not treffer:
-        return None
-    roh = re.sub(r",(\s*[}\]])", r"\1", treffer.group(0))  # trailing commas entfernen
-    try:
-        wert = json.loads(roh)
-        return wert if isinstance(wert, dict) else None
-    except json.JSONDecodeError:
-        return None
+    return json_objekt_aus_text(text)
 
 
 def erkenne_wochenplan(nachricht: str, model: ChatGroq | None = None) -> dict | None:
@@ -187,7 +174,10 @@ def _extrahiere_rezept(recherche_text: str, vermeide_titel: list[str], model: Ch
     prompt = (
         "Waehle aus den folgenden Rezept-Suchergebnissen EIN konkretes Rezept und gib "
         "es als JSON zurueck:\n"
-        '{"titel": "<Name>", "zutaten": ["<Zutat 1>", "<Zutat 2>", ...]}\n'
+        '{"titel": "<Name>", "zutaten": ["<Zutat 1>", "<Zutat 2>", ...], '
+        '"zubereitung": ["<Schritt 1>", "<Schritt 2>", ...]}\n'
+        "Das Feld 'zubereitung' nur fuellen, wenn die Suchergebnisse tatsaechlich "
+        "Zubereitungsschritte nennen -- sonst ein leeres Array [].\n"
         "Nur echte, im Text genannte Rezepte; erfinde nichts. Antworte NUR mit dem JSON."
         f"{hinweis}\n\nSuchergebnisse:\n{recherche_text}"
     )
@@ -201,7 +191,15 @@ def _extrahiere_rezept(recherche_text: str, vermeide_titel: list[str], model: Ch
     daten = _json_aus_text(antwort_text)
     if not daten or not daten.get("titel") or not isinstance(daten.get("zutaten"), list):
         return None
-    return {"titel": str(daten["titel"]).strip(), "zutaten": [str(z).strip() for z in daten["zutaten"] if str(z).strip()]}
+    # Zubereitung ist optional: Liefert die Recherche keine Schritte, bleibt das
+    # Feld leer (die GUI zeigt dann nur die Zutaten) -- lieber nichts als erfunden.
+    zubereitung = daten.get("zubereitung")
+    return {
+        "titel": str(daten["titel"]).strip(),
+        "zutaten": [str(z).strip() for z in daten["zutaten"] if str(z).strip()],
+        "zubereitung": ([str(s).strip() for s in zubereitung if str(s).strip()]
+                        if isinstance(zubereitung, list) else []),
+    }
 
 
 def _rohe_antwort(gerichte: list[dict], plan_text: str, kcal_notizen: list[str]) -> str:

@@ -41,7 +41,13 @@ def _skaliere_menge(zutat: str, faktor: float) -> str:
     z = zutat.strip()
     bruch = re.match(r"^(\d+)\s*/\s*(\d+)(.*)$", z)
     if bruch:
-        menge = int(bruch.group(1)) / int(bruch.group(2))
+        nenner = int(bruch.group(2))
+        if nenner == 0:
+            # "1/0 TL" ist keine sinnvolle Menge. Unveraendert zurueckgeben statt
+            # ZeroDivisionError: ein Tool darf den Agentenlauf nicht abbrechen
+            # (Muster "Fehler werden zur Entscheidung, nicht zum Absturz").
+            return zutat
+        menge = int(bruch.group(1)) / nenner
         rest = bruch.group(3)
     else:
         dezimal = re.match(r"^(\d+(?:[.,]\d+)?)(.*)$", z)

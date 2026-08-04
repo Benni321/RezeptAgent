@@ -22,8 +22,11 @@ env/
 
 # Laufzeit-Daten: persoenliche Praeferenzen (Geschmack + Bewertungen)
 data/praeferenzen.json
-# Laufzeit-Daten: aus Bewertungen GELERNTE Kochbuch-Rezepte (Seeds bleiben versioniert)
+# Laufzeit-Daten: aus Bewertungen GELERNTE bzw. manuell angelegte Kochbuch-Rezepte
+# (die mitgelieferten seed_*-Rezepte bleiben bewusst versioniert)
 data/rezepte/gelernt_*.json
+# Laufzeit-Daten: vom Nutzer gespeicherte Wochenplaene
+data/wochenplaene/
 
 # Logs
 *.log
@@ -43,7 +46,13 @@ semesterprojekt_anleitung*.pdf
 semesterprojekt_bewertung*.pdf
 
 # Sonstiges
-https:/
+# Artefakt eines fehlgeschlagenen Clones. Unter Windows entsteht der Ordner als
+# "https_" (Doppelpunkt ist auf NTFS unzulaessig) -- deshalb Wildcard statt "https:/".
+https*/
+
+# Streamlit-Secrets (Standardablage fuer Keys -- gehoert nie ins Repo;
+# die Projekt-Konfiguration .streamlit/config.toml bleibt dagegen versioniert)
+.streamlit/secrets.toml
 
 # Test cache
 .pytest_cache/

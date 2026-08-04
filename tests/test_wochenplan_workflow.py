@@ -219,3 +219,22 @@ def test_plane_woche_ohne_treffer_bricht_nicht_ab(monkeypatch):
     # Kein Gericht gefunden -> ehrliche Meldung statt Crash oder Halluzination.
     assert "keine passenden rezepte" in erg["antwort"].lower()
     assert erg["anzahl_angefragt"] == 2
+
+
+def test_extrahiere_rezept_uebernimmt_zubereitung_falls_vorhanden():
+    # Der Recherche-Sub-Agent liefert laut eigenem Prompt eine kurze Zubereitung
+    # je Rezept -- die soll ins Gericht wandern (die GUI zeigt sie an), nicht
+    # verworfen werden.
+    modell = _FakeModel(
+        '{"titel": "Linsen-Dal", "zutaten": ["Linsen", "Zwiebel"], '
+        '"zubereitung": ["Zwiebel anbraten", "Linsen zugeben"]}'
+    )
+    rezept = wf._extrahiere_rezept("Rechercheergebnis", [], modell)
+    assert rezept["zubereitung"] == ["Zwiebel anbraten", "Linsen zugeben"]
+
+
+def test_extrahiere_rezept_ohne_zubereitung_gibt_leere_liste():
+    # Nennt die Recherche keine Schritte, bleibt das Feld leer statt erfunden.
+    modell = _FakeModel('{"titel": "Linsen-Dal", "zutaten": ["Linsen"]}')
+    rezept = wf._extrahiere_rezept("Rechercheergebnis", [], modell)
+    assert rezept["zubereitung"] == []

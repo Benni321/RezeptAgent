@@ -32,7 +32,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_groq import ChatGroq
 
-from app.core.text_utils import entferne_reasoning
+from app.core.text_utils import entferne_reasoning, json_objekt_aus_text
 
 load_dotenv()
 
@@ -82,13 +82,13 @@ def _parse_naehrwerte(text: str) -> dict[str, float]:
     werte = {feld: 0.0 for feld in _FELDER}
     if not text:
         return werte
-    treffer = re.search(r"\{.*\}", text, re.DOTALL)
-    if not treffer:
-        return werte
-    try:
-        roh = json.loads(treffer.group(0))
-    except json.JSONDecodeError:
-        return werte
+    # json_objekt_aus_text zaehlt Klammern und nimmt das ERSTE vollstaendige
+    # Objekt. Der frueher genutzte gierige Ausdruck `\{.*\}` (DOTALL) matchte
+    # dagegen bis zur letzten `}` im Text -- haengte das Modell hinter das JSON
+    # noch eine "Berechnung: ..." mit weiteren Klammern, war der Match kaputt und
+    # ALLE Werte fielen auf 0.0, was der Aufrufer als NAEHRWERT-FEHLER meldete.
+    # Real beobachtet: korrekte Modellantwort, trotzdem "nicht schaetzbar".
+    roh = json_objekt_aus_text(text)
     if not isinstance(roh, dict):
         return werte
     for feld in _FELDER:

@@ -14,6 +14,11 @@ from pydantic import BaseModel, Field
 Modus = Literal["vorhanden", "einkaufsliste"]
 ERLAUBTE_BILDTYPEN = {"image/jpeg", "image/png", "image/webp"}
 
+# Groesse begrenzen (W9): Das Bild wird base64-kodiert (+33 %) an das VLM
+# geschickt und liegt bis dahin komplett im RAM. 8 MB decken jedes Handyfoto ab
+# und verhindern, dass ein einzelner Upload den Prozess belastet.
+MAX_BILD_BYTES = 8 * 1024 * 1024
+
 
 class ChatAnfrage(BaseModel):
     """Validierte Chat-Anfrage an den RezeptAgenten."""

@@ -32,8 +32,8 @@ erzeugte `llama-3.3-70b` auf Groq ein defektes Tool-Call-Format
 Llama-Vision-Modelle deprecatet — und im Juli 2026 zog Groq auch das danach
 genutzte `qwen/qwen3-32b` samt `llama-4-scout` (Vision) zurück. Der dritte
 erzwungene Wechsel (auf `qwen/qwen3.6-27b` als EIN multimodales Modell für Text
-und Vision — nur noch eine Deprecation-Quelle statt zwei) traf exakt das hier
-vorhergesagte Muster: Eval-Report und Evidence waren auf das zurückgezogene
+und Vision, das damit zwei zuvor getrennte Modell-Slots ersetzte) traf exakt das
+hier vorhergesagte Muster: Eval-Report und Evidence waren auf das zurückgezogene
 Modell geeicht und mussten gegen das unveränderte Testset neu gefahren werden.
 Der Re-Run bezifferte den Effekt: **87 % → 80 %**, und das *Fehlerbild* verschob
 sich — der alte Regel-6-Verstoß (Skalierung „im Kopf") verschwand, dafür ließ
@@ -64,6 +64,21 @@ Häufung von `status="fehler"`-Spans in den JSON-Logs (W5), gerissene
 kaputt). *Production-Schritt:* Modellversion pinnen, Updates bewusst gegen das
 Eval-Set fahren — im Groq-Free-Tier ist Pinning aber nur begrenzt möglich; diese
 Abhängigkeit haben wir uns mit dem Kostenlos-Stack eingekauft.
+
+**2b. Der Modell-Split: eine Abwägung, die Drift-Risiko *erhöht*.** Nach dem
+dritten Wechsel haben wir Recherche-Sub-Agent und Nährwert-Schätzung auf ein
+kleines Zweitmodell gelegt (`GROQ_MODEL_KLEIN`, `llama-3.1-8b-instant`), weil
+Groqs Rate-Limits pro Modell gelten und der Wochenplan sonst regelmäßig in
+429-Backoffs lief. Ehrlich betrachtet ist das ein **Zielkonflikt gegen genau
+diese Reflexion**: Wir haben Verfügbarkeit gekauft und dafür die
+Deprecation-Fläche verdoppelt — statt einer Modellabhängigkeit haben wir jetzt
+zwei, jede mit eigenem Verhalten, auf das Prompts und Verifier-Korridore
+kalibriert sind. Die Entscheidung fiel bewusst so, weil ein Abbruch mitten im
+Wochenplan den Nutzer sofort trifft, während eine Deprecation angekündigt wird
+und einmalig Arbeit kostet. **Woran wir es merken:** Der Eval-Report nennt bisher
+nur `GROQ_MODEL` — würde das kleine Modell zurückgezogen, stünde im Report
+weiterhin das große, und die Ursache wäre schwer zu sehen. Deshalb protokolliert
+der Runner seit 2026-08-05 **beide** Modelle im Report-Kopf.
 
 **3. Präferenz-Drift: das Memory lernt, aber es vergisst nie.** Bewertungen
 liegen als `Rezept → Sterne` ohne Zeitstempel in `data/praeferenzen.json`; das

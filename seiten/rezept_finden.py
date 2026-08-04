@@ -87,15 +87,20 @@ if braucht_onboarding:
         gespeichert = st.form_submit_button("Speichern & loslegen", type="primary")
     if gespeichert:
         try:
-            requests.post(
+            antwort_profil = requests.post(
                 f"{API_URL}/praeferenzen",
                 data={"ernaehrung": ",".join(e), "geschmack": ",".join(g), "wichtig": ",".join(w)},
                 timeout=5,
             )
-            st.session_state["onboarding_offen"] = False
-            st.rerun()
+            # Status pruefen, bevor das Onboarding als erledigt gilt -- sonst
+            # landet der Nutzer bei einem Serverfehler in einer stillen Schleife.
+            if antwort_profil.status_code == 200:
+                st.session_state["onboarding_offen"] = False
+                st.rerun()
+            else:
+                st.error(f"Konnte das Profil nicht speichern ({antwort_profil.status_code}).")
         except requests.RequestException:
-            st.error("Konnte das Profil nicht speichern.")
+            st.error("Backend nicht erreichbar – Profil nicht gespeichert.")
     st.stop()
 
 # --- Eingabe-Bereich: macht sichtbar, was man tun kann --------------------------

@@ -105,12 +105,38 @@ def run_rezept_agent(
 ) -> dict:
     """Fuehrt den RezeptAgenten aus und gibt Antwort + TAO-Trace zurueck.
 
+    Duenner Wrapper um _fuehre_lauf_aus mit EINEM Zweck: sicherstellen, dass der
+    Trace-Kontext auch dann beendet wird, wenn der Lauf mit einer Exception
+    abbricht. Ohne dieses finally bliebe die trace_id in der ContextVar stehen
+    und haftete an den Logs des naechsten Requests im selben Thread -- die
+    Observability (W5) wuerde also ausgerechnet im Fehlerfall unbrauchbar, wo man
+    sie am dringendsten braucht. beende_trace() ist idempotent, der zusaetzliche
+    Aufruf im Erfolgsfall (via _schliesse_trace) schadet nicht.
+
     Returns:
         dict mit:
           - "antwort": finale Antwort des Orchestrators (str)
           - "trace": Liste der TAO-Schritte (Aktionen + Beobachtungen)
           - "erkannte_zutaten": aus dem Foto erkannte Zutaten oder None
+          - "rezept_titel": extrahierter Rezeptname (None, wenn keiner erkennbar)
     """
+    try:
+        return _fuehre_lauf_aus(nachricht, modus, filter_, anmerkungen,
+                                geschmack_heute, image_bytes, image_mime)
+    finally:
+        beende_trace()
+
+
+def _fuehre_lauf_aus(
+    nachricht: str,
+    modus: str,
+    filter_: Optional[list[str]],
+    anmerkungen: str,
+    geschmack_heute: Optional[list[str]],
+    image_bytes: Optional[bytes],
+    image_mime: str,
+) -> dict:
+    """Die eigentliche Ausfuehrung (Vision -> Routing -> Agent/Workflow -> Trace)."""
     filter_ = filter_ or []
     erkannte_zutaten: Optional[list[str]] = None
 

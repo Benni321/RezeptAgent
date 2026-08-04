@@ -13,8 +13,10 @@ bewertet einen Vorschlag mit Sternen (`POST /bewertung`,
 (a) Die Bewertung landet im Profil (`data/praeferenzen.json`) und wird bei jeder
 künftigen Anfrage als Kontext injiziert — gut Bewertetes wird bevorzugt, schlecht
 Bewertetes gemieden (nachgewiesen im Eval-Fall `memory_schlecht_bewertet`: eine
-1-Stern-Kürbissuppe → der Agent schlug Süßkartoffelsuppe vor und schrieb explizit
-„enthält keine Kürbisse"). (b) Ab **4 Sternen** wird das Rezept zusätzlich als
+1-Stern-Kürbissuppe → im Lauf 2026-07-14 schlug der Agent Süßkartoffelsuppe vor
+und schrieb „enthält keine Kürbisse"; im aktuellen Lauf 2026-08-03 eine cremige
+Tomatensuppe mit dem Hinweis, „dass du Kürbissuppe eher meidest" — der Effekt
+ist stabil, die konkrete Alternative wechselt mit Modell und Websuche). (b) Ab **4 Sternen** wird das Rezept zusätzlich als
 JSON in die Kochbuch-Wissensbasis (`data/rezepte/`) übernommen, die
 `rag_retriever` per BM25 durchsucht ([kochbuch.py](../app/tools/kochbuch.py)) —
 der Eval-Fall `favoriten_rag` misst, dass der Agent bei Bezug auf Bewährtes
@@ -49,8 +51,13 @@ beobachtet, dann als dauerhafter Regressionsfall fixiert.
   wird (`rezept_aus_antwort`). Formuliert das Modell den Titel um, lernen wir
   unter zwei Namen oder gar nicht — wir haben bewusst „lieber kein Eintrag als
   ein falscher" gewählt, was Lernsignale kostet.
-- **Kein Vergessen.** Die Basis wächst monoton; ohne Abklingen/Kuration driftet
-  sie vom aktuellen Geschmack weg ([W12](reflexion_drift.md)).
+- **Vergessen ist möglich, aber manuell.** Seit dem GUI-Ausbau kann der Nutzer
+  gelernte und selbst angelegte Rezepte wieder löschen (`DELETE /kochbuch`,
+  Löschen-Button im Kochbuch) — die Basis wächst also nicht mehr zwangsläufig
+  monoton. Was weiterhin fehlt, ist *automatisches* Vergessen: kein Abklingen
+  alter Bewertungen, kein „zuletzt gekocht"-Zeitstempel. Kuration ist damit eine
+  bewusste Handlung des Nutzers, keine Eigenschaft des Systems
+  ([W12](reflexion_drift.md)).
 
 **4. Was wir bewusst nicht tun: Fine-Tuning.** Aus (Anfrage → gute Antwort)-
 Paaren ließe sich das Modell feintunen. Für diesen Use-Case ist das
@@ -59,9 +66,16 @@ Vergessens — und es würde das Beste an unserem Ansatz zerstören: dass jeder
 Lernschritt eine inspizierbare Datei ist statt eines Gewichts-Deltas. Der
 RAG-/Feedback-Weg liefert hier den größten Nutzen pro Aufwand.
 
-**Gütekontrolle vor Übernahme:** Gelernt wird nur kuratiert (≥ 4 Sterne,
-deterministischer API-Pfad — das LLM kann die Basis nicht selbst beschreiben,
-VL03) und Änderungen am System lassen sich gegen das feste Eval-Set prüfen,
-bevor sie „produktiv" gehen. Was fehlt (Production-Schritt): stabile Rezept-IDs
+**Gütekontrolle vor Übernahme:** In die Basis kommt nichts ohne menschliche
+Entscheidung — aber auf zwei verschiedenen Wegen: **automatisch gelernt** wird
+nur kuratiert (≥ 4 Sterne), **manuell angelegte** Rezepte (`POST /kochbuch`)
+umgehen diese Schwelle bewusst, weil der Nutzer die Kuratierung dort selbst
+vorgenommen hat — die Sternehürde ist eine Qualitätsprüfung für *Agenten*-
+Vorschläge, nicht für eigene Eingaben. Beide Wege sind deterministische
+API-Pfade; das LLM kann die Basis in keinem Fall selbst beschreiben (VL03).
+Der Preis der manuellen Tür, ehrlich: Was der Nutzer einträgt, wird inhaltlich
+nicht geprüft — eine unvollständige Zutatenliste landet unverändert im
+Retrieval-Korpus. Änderungen am System lassen sich gegen das feste Eval-Set
+prüfen, bevor sie „produktiv" gehen. Was fehlt (Production-Schritt): stabile Rezept-IDs
 statt Titel, bewertungsgewichtetes Ranking im Retriever und ein periodischer
 Eval-Lauf als Gate für Wissensbasis-Änderungen.

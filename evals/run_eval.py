@@ -106,7 +106,12 @@ def fuehre_fall_aus(fall: dict) -> dict:
         "eingabe": eingabe,
         "profil": fall.get("profil"),
         "kochbuch": fall.get("kochbuch"),
-        "modell": os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        "modell": os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
+        # Modell-Split: Recherche-Sub-Agent und Naehrwert-Schaetzung laufen auf
+        # einem eigenen (kleinen) Modell. Beide protokollieren, sonst waere bei
+        # einem Deprecation-/Verhaltenswechsel des kleinen Modells im Report nur
+        # das grosse zu sehen (siehe docs/reflexion_drift.md, Punkt 2b).
+        "modell_klein": os.getenv("GROQ_MODEL_KLEIN", "llama-3.1-8b-instant"),
         "datum": date.today().isoformat(),
     }
     try:
@@ -163,11 +168,13 @@ def baue_report(faelle_reihenfolge: list[str]) -> str:
     faelle_fehler = sum(1 for e in ergebnisse if e["fall_status"] == "fehler")
     datum = max((e.get("datum", "") for e in ergebnisse), default=date.today().isoformat())
     modell = ergebnisse[0]["modell"] if ergebnisse else "?"
+    modell_klein = ergebnisse[0].get("modell_klein", "?") if ergebnisse else "?"
 
     z = [
         "# Eval-Report: Constraint-Treue des RezeptAgenten (VL09)",
         "",
-        f"*Reale Laeufe gegen den echten Agenten (Groq `{modell}` + Tavily), Stand {datum}.*",
+        f"*Reale Laeufe gegen den echten Agenten (Groq `{modell}` fuer Orchestrator/Wochenplan,*",
+        f"*`{modell_klein}` fuer Recherche-Sub-Agent und Naehrwert-Schaetzung + Tavily), Stand {datum}.*",
         f"*Erzeugt mit `python evals/run_eval.py`; Checks: `evals/verifier.py` (programmatisch,*",
         "*ternaer, kein LLM-Judge — Begruendung in `evals/README.md`). Roh-Traces mit voller*",
         "*Antwort und allen TAO-Schritten: `docs/evidence/eval_traces/<fall-id>.json`.*",

@@ -16,8 +16,8 @@ Rollenaufteilung (Multi-Agent, W1):
 
 Bild-Eingaben (W2) werden NICHT hier verarbeitet, sondern vorgelagert im
 Vision-Modul (app/tools/vision.py): Foto -> Zutatenliste -> als Text an den
-Orchestrator. So bleibt der Orchestrator rein text-/tool-basiert und der Nutzer
-kann die erkannten Zutaten vorher bestaetigen (Human-in-the-Loop, VL5).
+Orchestrator. So bleibt der Orchestrator rein text-/tool-basiert; die erkannten
+Zutaten werden dem Nutzer in der GUI transparent angezeigt (VL5).
 
 TAO-Zyklus:
   Thought     -> Orchestrator entscheidet, welches Tool / welcher Sub-Agent.
@@ -140,7 +140,7 @@ def create_orchestrator():
     # damit den sequenziellen TAO-Zyklus -- der aber genau der sichtbare Kern von
     # Bewertungs-Dimension 2 ist. So bleibt der Trace echt schrittweise statt gebatcht.
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "qwen/qwen3-32b"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,  # transiente 429 (Free-Tier-TPM) automatisch abfangen (W9)
         model_kwargs={"parallel_tool_calls": False},

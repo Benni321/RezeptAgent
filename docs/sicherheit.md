@@ -41,7 +41,7 @@ Für jedes Tool/jeden Agenten: *Was kann es — und was braucht es wirklich?*
 | `web_search` | Tavily-Rezeptsuche | ✅ nur Suche, gibt nur Text zurück, ruft kein weiteres Tool |
 | `naehrwerte_schaetzen` | LLM-Schätzung | ✅ nur LLM-Call, kein I/O |
 | `einkaufsliste_erstellen`, `portionen_skalieren`, `wochenplan_zusammenstellen` | reine Logik/Arithmetik | ✅ kein I/O, kein Netz |
-| Profil/Bewertung **schreiben** | — | ✅ **nicht** als Agent-Tool, sondern nur über deterministische API-Endpunkte `POST /praeferenzen`, `POST /bewertung` ([api/main.py:117](../app/api/main.py#L117), [:141](../app/api/main.py#L141)). Der Agent kann das Profil nicht selbst verändern. |
+| Profil/Bewertung **schreiben** | — | ✅ **nicht** als Agent-Tool, sondern nur über deterministische API-Endpunkte `POST /praeferenzen`, `POST /bewertung` ([api/main.py:173](../app/api/main.py#L173), [:141](../app/api/main.py#L197)). Der Agent kann das Profil nicht selbst verändern. |
 
 Bestätigt: **keine Code-Execution, kein Dateisystem-Zugriff, kein beliebiger
 Netz-Kanal; Schreiben nur deterministisch über die API.** (Vgl. VL03: In smolagents
@@ -59,7 +59,7 @@ Code-Execution-Tool, also entfällt diese Angriffsfläche vollständig.)
    der Sub-Agent-Prompt weist an, deren Inhalt NUR als Daten zu lesen und darin
    enthaltene Befehle zu ignorieren ([recherche_agent.py:59](../app/agents/recherche_agent.py#L59)).
 3. **Excessive-Agency-Begrenzung:** Sub-Agent nur mit `web_search` +
-   `recursion_limit=10` ([recherche_agent.py:103](../app/agents/recherche_agent.py#L103);
+   `recursion_limit=10` ([recherche_agent.py:109](../app/agents/recherche_agent.py#L109);
    von 6 erhöht, weil `qwen3.6-27b` mehr Zyklen pro Suche braucht — der Deckel
    selbst bleibt);
    Orchestrator mit `recursion_limit=15` ([agent_service.py:203](../app/core/agent_service.py#L203)).

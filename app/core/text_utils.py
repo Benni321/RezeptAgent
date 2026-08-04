@@ -1,5 +1,6 @@
 """Kleine Text-Helfer, die mehrere Ausfuehrungspfade teilen."""
 
+import json
 import re
 
 # Reasoning-Modelle (z. B. qwen3) geben ihren Denkprozess in <think>...</think>
@@ -90,4 +91,55 @@ def extrahiere_rezept_titel(antwort: str) -> str | None:
             titel = _als_titel(zeile)
             if titel:
                 return titel
+    return None
+
+
+# --- JSON aus einer Modellantwort holen -------------------------------------------
+
+def json_objekt_aus_text(text: str) -> dict | None:
+    r"""Extrahiert das ERSTE vollstaendige JSON-Objekt aus einer Modellantwort.
+
+    Warum nicht einfach `re.search(r"\{.*\}", text, re.DOTALL)`? Weil dieser
+    Ausdruck GIERIG ist: Er matcht vom ersten `{` bis zur LETZTEN `}` im ganzen
+    Text. Modelle haengen an ihr JSON aber gern eine Erklaerung an ("Berechnung:
+    ...{...}"), und dann ist der Match kein gueltiges JSON mehr -> die Schaetzung
+    scheitert, obwohl das Modell sauber geantwortet hat. Real beobachtet bei der
+    Naehrwert-Schaetzung (alle Werte 0.0 -> "NAEHRWERT-FEHLER" trotz korrekter
+    Modellantwort).
+
+    Deshalb: Klammern zaehlen und beim ersten balancierten Objekt aufhoeren.
+    Robust zusaetzlich gegen Markdown-Codefences und ueberzaehlige Kommas vor der
+    schliessenden Klammer. Gibt None zurueck, wenn nichts Brauchbares drinsteht.
+    """
+    if not text:
+        return None
+    bereinigt = entferne_reasoning(text)
+    bereinigt = re.sub(r"```(?:json)?\s*|\s*```", "", bereinigt)
+
+    start = bereinigt.find("{")
+    while start != -1:
+        tiefe, in_string, escaped = 0, False, False
+        for i in range(start, len(bereinigt)):
+            zeichen = bereinigt[i]
+            if escaped:
+                escaped = False
+                continue
+            if zeichen == "\\":
+                escaped = True
+            elif zeichen == '"':
+                in_string = not in_string
+            elif not in_string:
+                if zeichen == "{":
+                    tiefe += 1
+                elif zeichen == "}":
+                    tiefe -= 1
+                    if tiefe == 0:
+                        roh = bereinigt[start:i + 1]
+                        roh = re.sub(r",(\s*[}\]])", r"\1", roh)  # trailing commas
+                        try:
+                            wert = json.loads(roh)
+                        except json.JSONDecodeError:
+                            break  # dieses Objekt ist kaputt -> naechstes probieren
+                        return wert if isinstance(wert, dict) else None
+        start = bereinigt.find("{", start + 1)
     return None

@@ -9,9 +9,13 @@ Designentscheidung (sinnvoll statt aufgesetzt):
 - Bewusst KEIN eigener Agent, sondern ein vorgelagerter Vision-Schritt. Die
   Bilderkennung ist ein abgeschlossener Einzelschritt ohne Mehrschritt-Loop
   -> ein VLM-Aufruf genuegt (VL5-Muster: Bild als task_images).
-- Das Ergebnis (Zutatenliste) wird dem Nutzer in der GUI zur BESTAETIGUNG
-  angezeigt, bevor der Orchestrator darauf aufbaut. Grund: VLMs halluzinieren
-  auch bei Bildern (VL5) -> Human-in-the-Loop.
+- Das Ergebnis (Zutatenliste) wird dem Nutzer in der GUI TRANSPARENT ANGEZEIGT
+  ("Aus dem Foto erkannt: ..."), damit er eine Fehlerkennung sofort sieht und die
+  Anfrage korrigiert wiederholen kann. Grund: VLMs halluzinieren auch bei Bildern
+  (VL5). EHRLICHE GRENZE: Das ist eine Transparenz-Anzeige NACH dem Lauf, kein
+  vorgeschaltetes Bestaetigungs-Gate -- der Agent startet im selben Request.
+  Ein echtes Human-in-the-Loop-Gate waere der dokumentierte Ausbauschritt
+  (siehe docs/PROJEKTDOKU.md "Grenzen des Systems").
 
 Modell ueber GROQ_VISION_MODEL konfigurierbar (Default: multimodales Llama-4).
 """
@@ -25,9 +29,12 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 from langchain_groq import ChatGroq
 
+from app.core.logging_config import get_logger
 from app.core.text_utils import entferne_reasoning
 
 load_dotenv()
+
+logger = get_logger("rezeptagent.vision")
 
 VISION_PROMPT = (
     "Auf diesem Foto sind Lebensmittel/Zutaten zu sehen (z. B. ein Kuehlschrank "
@@ -74,10 +81,12 @@ def erkenne_zutaten_aus_bild(image_bytes: bytes, mime_type: str = "image/jpeg") 
         image_bytes: die rohen Bilddaten.
         mime_type: z. B. "image/jpeg" oder "image/png".
     Returns:
-        Liste erkannter Zutaten (kann leer sein, wenn nichts erkannt wurde).
+        Liste erkannter Zutaten. LEER, wenn nichts erkannt wurde ODER die Analyse
+        fehlschlug -- der Aufrufer arbeitet dann ohne Foto-Zutaten weiter
+        (graceful degradation, W9), statt die ganze Anfrage abzubrechen.
     """
     model = ChatGroq(
-        model=os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct"),
+        model=os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,  # transiente 429 automatisch abfangen (W9)
     )
@@ -87,7 +96,15 @@ def erkenne_zutaten_aus_bild(image_bytes: bytes, mime_type: str = "image/jpeg") 
             {"type": "image_url", "image_url": {"url": _to_data_url(image_bytes, mime_type)}},
         ]
     )
-    antwort = model.invoke([nachricht])
+    try:
+        antwort = model.invoke([nachricht])
+    except Exception as exc:
+        # Gleiches Muster wie in web_search/naehrwerte/recherche_agent: ein
+        # fehlgeschlagener LLM-Aufruf wird zur leeren Beobachtung, nicht zur
+        # Exception. Wichtig auch fuer die Evidence-Skripte, die diese Funktion
+        # direkt (ohne den try/except des agent_service) aufrufen.
+        logger.warning("vision_llm_fehler: %s", type(exc).__name__)
+        return []
     # entferne_reasoning: Reasoning-Modelle (z. B. qwen3) stellen einen <think>-Block
     # voran; ohne Filter zerlegt der Zeilen-Fallback von _parse_zutaten den Denktext
     # in Dutzende Pseudo-"Zutaten" (real beobachtet: 95 statt 6 echte Zutaten).

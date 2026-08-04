@@ -13,3 +13,10 @@ venv
 docs/Bisherige Vorlesungsinhalte/
 *.pdf
 data/praeferenzen.json
+*.pptx
+# Laufzeit-Daten des Entwicklers gehoeren nicht ins Image -- data/ wird
+# zur Laufzeit als Volume gemountet (siehe docker-compose.yml).
+data/wochenplaene
+data/rezepte/gelernt_*.json
+docs/evidence/eval_traces/runs
+.streamlit/secrets.toml

@@ -276,3 +276,23 @@ def test_schlechte_bewertung_landet_nicht_im_kochbuch(monkeypatch, tmp_path):
     assert antwort.json()["im_kochbuch"] is False
     from app.tools import kochbuch
     assert kochbuch.lade_alle() == []
+
+
+def test_chat_zu_grosses_bild_wird_abgelehnt(monkeypatch):
+    # W9: Groessenlimit VOR der Verarbeitung. Ohne das wandert ein beliebig
+    # grosses Bild komplett in den RAM und base64-kodiert (+33 %) an das VLM.
+    from app.api.schemas import MAX_BILD_BYTES
+
+    def darf_nicht_laufen(**kwargs):
+        raise AssertionError("Agent haette bei zu grossem Bild nicht starten duerfen")
+
+    monkeypatch.setattr(api, "run_rezept_agent", darf_nicht_laufen)
+
+    zu_gross = b"\xff\xd8\xff" + b"x" * (MAX_BILD_BYTES + 1)
+    antwort = client.post(
+        "/chat",
+        data={"nachricht": "Was kann ich kochen?", "modus": "einkaufsliste"},
+        files={"bild": ("riesig.jpg", zu_gross, "image/jpeg")},
+    )
+    assert antwort.status_code == 413
+    assert "zu gross" in antwort.json()["detail"].lower()

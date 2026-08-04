@@ -62,15 +62,20 @@ with st.form("profil_bearbeiten"):
 
 if speichern:
     try:
-        requests.post(
+        antwort = requests.post(
             f"{API_URL}/praeferenzen",
             data={"ernaehrung": ",".join(e), "geschmack": ",".join(g), "wichtig": ",".join(w)},
             timeout=5,
         )
-        st.session_state["profil_gespeichert"] = True
-        st.rerun()
+        # Status pruefen, BEVOR Erfolg gemeldet wird: sonst sieht der Nutzer auch
+        # bei HTTP 500 "Profil gespeichert" und verliert seine Eingabe still.
+        if antwort.status_code == 200:
+            st.session_state["profil_gespeichert"] = True
+            st.rerun()
+        else:
+            st.error(f"Konnte das Profil nicht speichern ({antwort.status_code}).")
     except requests.RequestException:
-        st.error("Konnte das Profil nicht speichern.")
+        st.error("Backend nicht erreichbar – Profil nicht gespeichert.")
 
 # --- Bewertungen: das gelernte Signal, nur lesend --------------------------------
 bewertungen = profil.get("bewertungen", {})

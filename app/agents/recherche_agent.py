@@ -69,14 +69,19 @@ def create_recherche_agent():
     # max_retries hoch: faengt transiente 429 (Groq Free-Tier, 12k TPM) automatisch
     # mit Backoff ab, statt den ganzen Lauf abzubrechen (Robustheit, W9).
     #
-    # Modell-Split: Der Sub-Agent laeuft auf einem KLEINEN Modell (GROQ_MODEL_KLEIN),
-    # nicht auf dem Orchestrator-Modell. Zwei Gruende: (1) Die Aufgabe ist ein
-    # abgeschlossener Einzelschritt ohne Planung (suchen, Treffer zusammenfassen) --
-    # dafuer reicht ein 8B-Modell. (2) Groq-Limits gelten PRO Modell: Der
-    # tokenhungrigste Teil (Web-Treffer im Kontext) zieht so aus einem EIGENEN
-    # TPM-Topf statt das Budget des Orchestrators zu erschoepfen (weniger 429-Backoffs).
+    # Modell-Wahl, gemessen statt geraten: Der Sub-Agent laeuft auf dem GROSSEN
+    # Modell (GROQ_MODEL). Ein A/B-Lauf mit derselben Anfrage ("Abendessen mit
+    # Blumenkohl") am 2026-08-05 zeigte, warum:
+    #   llama-3.1-8b-instant -> 2,2 s, "Keine passenden Rezepte gefunden" (unbrauchbar)
+    #   qwen/qwen3.6-27b     -> 9,6 s, zwei verwertbare Rezepte mit Zubereitung
+    # Der Sub-Agent ist eben KEIN Ein-Schritt-Tool: Er muss web_search aufrufen,
+    # die Treffer bewerten, ggf. nachsuchen und strukturiert zusammenfassen --
+    # eine kleine ReAct-Schleife, an der ein 8B-Modell scheitert. Das kleine
+    # Modell bleibt deshalb der Naehrwert-Schaetzung vorbehalten (dort: ein
+    # Prompt -> ein JSON, kein Tool-Calling; siehe naehrwerte.py).
+    # max_retries hoch: faengt transiente 429 automatisch mit Backoff ab (W9).
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL_KLEIN", "llama-3.1-8b-instant"),
+        model=os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b"),
         temperature=0,
         max_retries=5,
     )

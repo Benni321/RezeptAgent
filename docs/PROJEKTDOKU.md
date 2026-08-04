@@ -61,21 +61,28 @@ flowchart TD
     S --> R{"Wochenplan-Anfrage?<br/>(erkenne_wochenplan)"}
 
     R -- "ja: mehrere Gerichte" --> W["Wochenplan-Workflow (code-orchestriert)<br/>pro Gericht: Recherche → kcal-Check → ggf. 1 Revision<br/>Abschluss: wochenplan_zusammenstellen"]
-    R -- "nein: Einzelrezept" --> O["Orchestrator-Agent<br/>(LangGraph ReAct, voll agentisch)"]
+    R -- "nein: Einzelrezept" --> O["Orchestrator-Agent<br/>(LangGraph ReAct, voll agentisch)<br/>GROQ_MODEL"]
 
-    O --> RA["recherche_rezepte<br/>Sub-Agent: Webrecherche [W1]"]
+    O --> RA["recherche_rezepte<br/>Sub-Agent: Webrecherche [W1]<br/>GROQ_MODEL_KLEIN"]
     W --> RA
     RA --> WS["web_search (Tavily)<br/>Untrusted-Delimiter [VL03]"]
 
     O --> RAG["rag_retriever<br/>persönliches Kochbuch, BM25 [W3/W4]"]
-    O --> NW["naehrwerte_schaetzen<br/>kcal/Makros (LLM-Schätzung)"]
+    O --> NW["naehrwerte_schaetzen<br/>kcal/Makros (LLM-Schätzung)<br/>GROQ_MODEL_KLEIN"]
     W --> NW
     O --> SK["portionen_skalieren<br/>(deterministisch)"]
     O --> EK["einkaufsliste_erstellen<br/>(deterministisch)"]
 
-    API["POST /praeferenzen · POST /bewertung<br/>(deterministische API-Endpunkte, kein Agenten-Tool)"] --> P
-    API -- "≥ 4 Sterne → Rezept in data/rezepte/" --> KB["Kochbuch-Wissensbasis"]
+    API["Deterministische API-Endpunkte (kein Agenten-Tool):<br/>POST /praeferenzen · POST /bewertung<br/>POST · DELETE /kochbuch<br/>POST · DELETE /wochenplan"] --> P
+    API -- "≥ 4 Sterne oder manuell angelegt" --> KB["Kochbuch-Wissensbasis<br/>data/rezepte/"]
+    API -- "gespeicherte Pläne" --> WP["Wochenplan-Ablage<br/>data/wochenplaene/"]
+    API -- "aus eigenen Rezepten,<br/>ohne LLM" --> WPK["POST /wochenplan/aus-kochbuch"]
+    KB --> WPK
+    WPK --> WP
     KB --> RAG
+
+    GUI["Streamlit-Mehrseiten-GUI (seiten/)<br/>Rezept finden · Mein Kochbuch<br/>Meine Wochenpläne · Mein Profil"] --> API
+    GUI --> S
 ```
 
 **Zwei Verarbeitungswege, bewusst getrennt:** Eine Einzelrezept-Anfrage geht an den
@@ -113,9 +120,9 @@ die Architektur ehrlich statt aufgebläht.
   bewusst nicht haben wollen (siehe [Sicherheit](#28-sicherheits-design-vl03));
   eine handgeschriebene TAO-Schleife hätte P3 (etabliertes Framework) verfehlt und
   Streaming/Tool-Binding neu erfunden.
-- **Modell: Groq `qwen/qwen3.6-27b`** (Text und Vision — ein multimodales
-  Modell, eine Deprecation-Quelle) — kostenlos, schnell, **zuverlässiges
-  Tool-Calling**. Diese Wahl ist erarbeitet, nicht geraten: `llama-3.3-70b`
+- **Modell: Groq `qwen/qwen3.6-27b`** (multimodal — deckt Text *und* Vision mit
+  einem Modell ab) — kostenlos, schnell, **zuverlässiges Tool-Calling**. Diese
+  Wahl ist erarbeitet, nicht geraten: `llama-3.3-70b`
   erzeugt auf Groq zeitweise ein defektes Tool-Call-Format (`tool_use_failed`,
   jede Recherche schlägt fehl); `openai/gpt-oss-120b` ist für den call-schweren
   Wochenplan zu langsam (mehrere Minuten); das ab 2026-07-13 genutzte
@@ -123,10 +130,36 @@ die Architektur ehrlich statt aufgebläht.
   auf den Nachfolger ist als dritter Modell-Drift-Fall dokumentiert
   ([reflexion_drift](reflexion_drift.md)). Reasoning-Ausgaben (`<think>…`) werden
   vor der Nutzerantwort gefiltert
-  ([app/core/text_utils.py](../app/core/text_utils.py)); zusätzlich ist
-  `reasoning_effort="none"` gesetzt, damit Denk-Tokens nicht das
-  Free-Tier-TPM-Budget verbrauchen. Umstellbar über `GROQ_MODEL`.
-- **`parallel_tool_calls=False`** ([orchestrator.py:150](../app/agents/orchestrator.py#L150)):
+  ([app/core/text_utils.py](../app/core/text_utils.py)); die
+  Nährwert-Schätzung hängt zusätzlich `/no_think` an ihren Prompt, weil ein langer
+  Denkblock dort die JSON-Antwort abschneiden konnte
+  ([naehrwerte.py](../app/tools/naehrwerte.py)). Umstellbar über `GROQ_MODEL`.
+- **Modell-Split — und wo er an seine Grenze stößt (gemessen).** Die Idee: Nicht
+  jeder Schritt braucht das große Modell, und weil **Groqs Rate-Limits pro Modell
+  gelten**, verteilt ein zweites Modell den Verbrauch auf zwei Budget-Töpfe
+  (weniger 429-Abbrüche bei langen Wochenplänen). Umgesetzt ist der Split
+  deshalb dort, wo er nachweislich trägt — und *nicht* dort, wo er schadet:
+
+  | Komponente | Modell | Warum |
+  |---|---|---|
+  | Orchestrator, Wochenplan-Workflow | `GROQ_MODEL` | Planung, Tool-Wahl, Mehrschritt-Koordination |
+  | Recherche-Sub-Agent | `GROQ_MODEL` | **Messung, nicht Vermutung** (s. u.) |
+  | Nährwert-Schätzung | `GROQ_MODEL_KLEIN` | ein Prompt → ein JSON, kein Tool-Calling |
+
+  Ursprünglich lief auch der Recherche-Sub-Agent auf dem kleinen Modell — die
+  Annahme war „Treffer zusammenfassen ist ein Einzelschritt". Ein A/B-Lauf mit
+  derselben Anfrage („Abendessen mit Blumenkohl", 2026-08-05) widerlegte das:
+  `llama-3.1-8b-instant` antwortete nach 2,2 s mit *„Keine passenden Rezepte
+  gefunden"*, `qwen/qwen3.6-27b` lieferte nach 9,6 s zwei verwertbare Rezepte.
+  Der Grund ist strukturell: Der Sub-Agent ist eben **kein** Ein-Schritt-Tool —
+  er ruft `web_search`, bewertet Treffer, sucht ggf. nach und fasst strukturiert
+  zusammen. Das ist eine kleine ReAct-Schleife, an der ein 8B-Modell scheitert.
+  Bei der Nährwert-Schätzung ist es umgekehrt: Dort ist das kleine Modell sogar
+  *überlegen*, weil es keinen `<think>`-Block produziert, der die JSON-Antwort
+  abschneiden kann.
+  *Preis der Entscheidung, ehrlich:* zwei Modellabhängigkeiten statt einer, also
+  auch zwei Deprecation-Quellen (siehe [reflexion_drift](reflexion_drift.md)).
+- **`parallel_tool_calls=False`** ([orchestrator.py:146](../app/agents/orchestrator.py#L146)):
   erzwingt EINEN Tool-Aufruf pro Schritt. Sonst batchen Modelle mehrere Tools in
   einen Schritt und umgehen den sequenziellen TAO-Zyklus — der aber der sichtbare
   Kern der Bewertungs-Dimension 2 ist.
@@ -168,6 +201,11 @@ die Architektur ehrlich statt aufgebläht.
   Agency-Deckel (VL03), Details in [sicherheit.md](sicherheit.md). (Ursprünglich 6;
   nach dem Modellwechsel erhöht, weil `qwen3.6-27b` mehr Zyklen pro Suche braucht
   und sonst mit „Sorry, need more steps" abbrach — Eval-Befund 2026-08-02.)
+- **Modellwahl: gemessen, nicht angenommen.** Der Sub-Agent lief zwischenzeitlich
+  auf dem kleinen Modell (Token-Ökonomie) — ein A/B-Lauf zeigte, dass er damit
+  keine verwertbaren Treffer mehr liefert, weil seine Aufgabe eine eigene
+  ReAct-Schleife ist und kein Einzelschritt. Er läuft deshalb auf `GROQ_MODEL`
+  ([§ 2.2](#22-orchestrator-langgraph-react--framework--und-modellwahl)).
 
 ### 2.4 Wochenplan-Workflow — bewusste Korrektur nach gescheitertem Ansatz
 
@@ -222,7 +260,7 @@ Der lehrreichste Teil des Projekts
 | [portionen_skalieren](../app/tools/skalierung.py) | reine Arithmetik | Mengen-Rechnen muss exakt sein — genau da verrechnen sich LLMs; Prompt: „Rechne Mengen niemals selbst im Kopf" |
 | [einkaufsliste_erstellen](../app/tools/shopping_list.py) | reine Logik | Fehlende Zutaten bestimmen ist Mengen-/Mengenlehre, kein Sprachproblem |
 | [wochenplan_zusammenstellen](../app/tools/wochenplan.py) | reine Logik | Deterministische Aggregation als garantierter Abschluss des Workflows |
-| [vision](../app/tools/vision.py) | Groq-VLM, **vorgelagert** | Foto → Zutatenliste läuft **vor** dem Orchestrator: Der bleibt rein text-/tool-basiert, und der Nutzer kann die erkannten Zutaten bestätigen (Human-in-the-Loop). Realer Nachweis: [vision_nachweis.md](evidence/vision_nachweis.md) |
+| [vision](../app/tools/vision.py) | Groq-VLM, **vorgelagert** | Foto → Zutatenliste läuft **vor** dem Orchestrator: Der bleibt rein text-/tool-basiert. Die erkannten Zutaten werden dem Nutzer transparent angezeigt (kein Bestätigungs-Gate, siehe [Grenzen](#5-grenzen-des-systems)). Realer Nachweis: [vision_nachweis.md](evidence/vision_nachweis.md) |
 
 **`naehrwerte_schaetzen` — Nährwerte als Constraint, nicht als Deko.** Nennt der
 Nutzer eine kcal-Vorgabe, wird daraus eine Bedingung, die aktiv geprüft wird.
@@ -271,9 +309,22 @@ situationsabhängige Tool-Wahl, gemessen im Eval-Fall `favoriten_rag`).
   offline testbar, kein Download: Der Kursrahmen (kostenlos, reproduzierbar)
   bleibt intakt. BM25 ist bewusst **selbst implementiert** (~40 Zeilen) statt als
   Bibliothek gezogen.
-- **Schreiben ist kein Agenten-Tool:** Der Eintrag ins Kochbuch passiert im
-  deterministischen API-Pfad (`POST /bewertung`, ≥ 4 Sterne), nie durch das LLM
-  (VL03: minimale Rechte; das Tool liest nur).
+- **Schreiben ist kein Agenten-Tool:** Jede Änderung der Wissensbasis läuft über
+  deterministische API-Pfade, nie durch das LLM (VL03: minimale Rechte; das Tool
+  `rag_retriever` liest ausschließlich). Es gibt drei Wege hinein und einen hinaus:
+
+  | Weg | Auslöser | Quelle-Feld |
+  |---|---|---|
+  | gelernt | `POST /bewertung` mit ≥ 4 Sternen — Zutaten + Zubereitung werden aus der Agent-Antwort extrahiert | `bewertung` |
+  | manuell | `POST /kochbuch` — der Nutzer tippt Titel/Zutaten/Zubereitung selbst ein, **ohne** Bewertungsschwelle | `manuell` |
+  | mitgeliefert | Seed-Rezepte im Repo gegen den Kaltstart | `seed` |
+  | **löschen** | `DELETE /kochbuch` — nur `gelernt`/`manuell`; **Seeds sind geschützt**, weil sie versionierte Repo-Dateien sind und ein GUI-Klick sie sonst still aus dem Arbeitsverzeichnis entfernen würde | — |
+
+  Der manuelle Weg ist bewusst *ohne* Sternehürde: Wer ein Rezept selbst einträgt,
+  hat die Kuratierungs-Entscheidung schon getroffen — die 4-Sterne-Schwelle ist
+  eine Qualitätsprüfung für *Agenten*-Vorschläge, nicht für eigene Eingaben.
+  Das Löschen ergänzt den Lern-Loop um das, was ihm bisher fehlte: **Vergessen**
+  (siehe [reflexion_continual.md](reflexion_continual.md)).
 
 ### 2.7 Memory: Profil + Bewertungen — Kontext statt Tool
 
@@ -407,12 +458,67 @@ Einzelergebnissen: [eval_report.md](evidence/eval_report.md), Roh-Traces daneben
 
 ### 2.11 API, GUI, Container, CI
 
-- **FastAPI** ([app/api/main.py](../app/api/main.py)): `/chat` (W6), `/health`
-  (W11), `POST /praeferenzen`, `POST /bewertung`; Pydantic-Validierung +
-  Bildtyp-Prüfung (W9, [app/api/schemas.py](../app/api/schemas.py)). Die
-  Streamlit-GUI ist der echte Konsument der API — der Prediction Service ist
-  keine Checkbox, sondern in Benutzung.
-- **Docker Compose** (W7): Dienste `api` + `ui` für reproduzierbaren Start.
+**FastAPI** ([app/api/main.py](../app/api/main.py)) — 12 Endpunkte. Das
+Ordnungsprinzip ist dasselbe wie beim Memory (§ 2.7): **Lesen ist Anzeige,
+Schreiben ist eine deterministische API-Aktion — nie eine Agenten-Entscheidung**
+(VL03: minimale Rechte). Nur `POST /chat` startet überhaupt ein LLM.
+
+| Endpunkt | Zweck | LLM? |
+|---|---|---|
+| `GET /health` | Betriebsbereitschaft (W11), Container-Healthcheck | nein |
+| `POST /chat` | Anfrage (Text + optional Foto) an den Agenten (W6) | **ja** |
+| `GET /praeferenzen` | Profil + Bewertungen lesen (GUI) | nein |
+| `POST /praeferenzen` | Profil setzen (Onboarding, Profil-Seite) | nein |
+| `POST /bewertung` | Sterne speichern; ab 4 ★ zusätzlich ins Kochbuch (W3/W13) | nein |
+| `GET /kochbuch` | Wissensbasis auflisten (Kochbuch-Seite) | nein |
+| `POST /kochbuch` | eigenes Rezept manuell anlegen | nein |
+| `DELETE /kochbuch` | gelerntes/manuelles Rezept löschen (Seeds geschützt) | nein |
+| `GET /wochenplan` | gespeicherte Wochenpläne auflisten | nein |
+| `POST /wochenplan` | Wochenplan dauerhaft sichern | nein |
+| `DELETE /wochenplan/{id}` | Wochenplan löschen | nein |
+| `POST /wochenplan/aus-kochbuch` | Plan **deterministisch** aus eigenen Rezepten bauen | nein |
+
+Zwei Entscheidungen daran sind erklärungsbedürftig:
+
+- **`POST /wochenplan/aus-kochbuch` kostet null Tokens.** Wer seine Gerichte
+  selbst aus dem Kochbuch wählt, braucht keinen Agenten — die Aggregation zu
+  *einer* Einkaufsliste ist reine Mengenlogik. Der Endpunkt ruft deshalb genau
+  dasselbe Tool auf wie der agentische Workflow
+  (`wochenplan_zusammenstellen`, [app/tools/wochenplan.py](../app/tools/wochenplan.py)),
+  nur ohne LLM davor. Konsequenz des Grundsatzes „deterministisch, wo möglich —
+  Agent, wo nötig": derselbe Nutzen, sofort, ohne Free-Tier-Budget.
+- **`/chat` ist bewusst *synchron* deklariert** (`def`, nicht `async def`,
+  [main.py](../app/api/main.py)). FastAPI führt synchrone Routen im Threadpool
+  aus. Als `async def` hätte ein einzelner mehrminütiger Wochenplan-Lauf den
+  Event-Loop blockiert und **jede** andere Anfrage eingefroren — auch `/health`
+  und die Lese-Endpunkte der GUI. Real beobachtet, bevor es umgestellt wurde.
+
+Validierung an der Grenze (W9): Pydantic-Schemas
+([schemas.py](../app/api/schemas.py)) plus Bildtyp-, Lesbarkeits- und
+Größenprüfung des Uploads.
+
+**Streamlit-GUI** — seit dem Umbau eine **Mehrseiten-App** (`st.navigation` in
+[streamlit_app.py](../streamlit_app.py), Seiten in [seiten/](../seiten/)):
+
+| Seite | Inhalt |
+|---|---|
+| `start.py` | Einstieg: was das System kann, Links in die Bereiche |
+| `rezept_finden.py` | Hauptseite: Anfrage, Foto-Upload, TAO-Trace, Bewertung |
+| `mein_kochbuch.py` | Wissensbasis ansehen, eigenes Rezept anlegen, löschen |
+| `meine_wochenplaene.py` | gespeicherte Pläne + Plan aus dem Kochbuch bauen |
+| `mein_profil.py` | Profil bearbeiten, bisherige Bewertungen |
+
+Der Aufteilungsgrund ist derselbe wie bei der API: Die drei Verwaltungs-Seiten
+zeigen **gespeicherte Daten direkt an** (ein `GET`, kein Agentenlauf) — nur
+„Rezept finden" startet den Agenten. Dadurch ist die Wissensbasis für den Nutzer
+sichtbar und editierbar, statt nur indirekt über `rag_retriever` zu existieren.
+Gemeinsame Konstanten und die Gericht-Anzeige liegen in
+[seiten/_gemeinsam.py](../seiten/_gemeinsam.py); die Ablage der Pläne in
+[app/core/wochenplaene.py](../app/core/wochenplaene.py) (JSON pro Plan, gleiche
+Begründung wie beim Kochbuch — inkl. Pfad-Traversal-Schutz beim Löschen).
+
+- **Docker Compose** (W7): Dienste `api` + `ui` für reproduzierbaren Start,
+  `data/` als Volume, damit Gelerntes einen Container-Neustart überlebt.
 - **CI** (W10, [.github/workflows/ci.yml](../.github/workflows/ci.yml)):
   `pytest -q` bei jedem Push/PR — möglich, weil **alle Tests ohne API-Keys grün
   laufen** (LLM-/HTTP-Aufrufe gemockt, W8).
@@ -443,7 +549,7 @@ Durcherzählt am **echten Referenz-Lauf (b)** vom 2026-07-15
    Neue Recherche „kalorienarmer Ersatz", dann kcal-Check des Ersatzes:
    **~1400 kcal — schlechter als das Original.** Der Workflow übernimmt einen
    Ersatz nur, wenn er nicht schlechter ist
-   ([wochenplan_workflow.py:275](../app/core/wochenplan_workflow.py#L275)) —
+   ([wochenplan_workflow.py:327](../app/core/wochenplan_workflow.py#L327)) —
    er behält also Gericht 1 und vermerkt ehrlich „trotz Revision über Limit".
 4. **Zyklus 5 — Recherche Gericht 2**, mit explizitem Abwechslungs-Zusatz
    „(anderes Gericht als: Zucchini-Nudeln …)". Observation: „Vegetarischer
@@ -475,10 +581,11 @@ nachprüfbar.
 | Kurskonzept (VL) | Umsetzung bei uns | Beleg |
 |---|---|---|
 | TAO-/ReAct-Zyklus (VL: AI Agents & TAO) | LangGraph `create_react_agent`; Trace mit beschrifteten Thought/Action/Observation-Schritten, live in CLI/GUI | [orchestrator.py](../app/agents/orchestrator.py), [agent_service.py](../app/core/agent_service.py), [referenz_traces.md](evidence/referenz_traces.md) |
-| Tool-Design: deterministisch vs. LLM | Rechnen/Aggregieren deterministisch (Skalierung, Einkaufsliste, Wochenplan-Abschluss, kcal-Vergleich); Schätzen/Formulieren per LLM (Nährwerte, Rezeptwahl) | [skalierung.py](../app/tools/skalierung.py), [wochenplan.py](../app/tools/wochenplan.py), [naehrwerte.py](../app/tools/naehrwerte.py) |
+| Tool-Design: deterministisch vs. LLM | Rechnen/Aggregieren deterministisch (Skalierung, Einkaufsliste, Wochenplan-Abschluss, kcal-Vergleich); Schätzen/Formulieren per LLM (Nährwerte, Rezeptwahl). Konsequent bis in die API: `POST /wochenplan/aus-kochbuch` baut einen kompletten Plan **ohne jeden LLM-Aufruf** | [skalierung.py](../app/tools/skalierung.py), [wochenplan.py](../app/tools/wochenplan.py), [naehrwerte.py](../app/tools/naehrwerte.py), [api/main.py](../app/api/main.py) |
+| Kontext-/Token-Ökonomie (VL1: Context Window; VL4: Kosten im Multi-Agent) | **Modell-Split**: großes Modell nur für Planung/Tool-Wahl, kleines (`GROQ_MODEL_KLEIN`) für abgeschlossene Einzelschritte — Rate-Limits gelten pro Modell, also zwei Budget-Töpfe; dazu Kontext-Deckel (1200 Zeichen Sub-Agent-Rückgabe, 3 Treffer, max. 7 Gerichte) | [recherche_agent.py](../app/agents/recherche_agent.py), [naehrwerte.py](../app/tools/naehrwerte.py), [§ 2.2](#22-orchestrator-langgraph-react--framework--und-modellwahl) |
 | Multi-Agent mit Kontext-Isolation (VL4) | Recherche-Sub-Agent verarbeitet Such-„Rauschen" im eigenen Kontext, gibt kompakte Liste zurück; „Sub-Agent = Function Call" | [recherche_agent.py](../app/agents/recherche_agent.py) |
 | Workflow vs. Agent (VL4/VL: Agenten-Grenzen) | Wochenplan code-orchestriert nach gescheitertem voll-agentischem Ansatz: „Workflow für die Struktur, Agent für den Inhalt" | [wochenplan_workflow.py](../app/core/wochenplan_workflow.py), [wochenplan_trace.md](evidence/wochenplan_trace.md) |
-| Multimodalität / Vision-Agents (VL4) | Kühlschrank-Foto → Zutatenliste (Groq-VLM), vorgelagert mit Nutzer-Bestätigung (Human-in-the-Loop) | [vision.py](../app/tools/vision.py), [vision_nachweis.md](evidence/vision_nachweis.md) |
+| Multimodalität / Vision-Agents (VL4) | Kühlschrank-Foto → Zutatenliste (Groq-VLM), vorgelagert als Ein-Schritt-Aufruf (`task_images`-Muster); erkannte Zutaten transparent angezeigt | [vision.py](../app/tools/vision.py), [vision_nachweis.md](evidence/vision_nachweis.md) |
 | Agentic RAG als Tool-Entscheidung (VL7) | `rag_retriever` (BM25 über selbst gelerntes Kochbuch) als Tool; Orchestrator entscheidet situationsabhängig, bei `RAG-LEER` Umformulierung/Websuche | [kochbuch.py](../app/tools/kochbuch.py), Eval-Fall `favoriten_rag` in [eval_report.md](evidence/eval_report.md) |
 | Observability: Traces/Spans (VL7/VL09) | `trace_id` pro Run (ContextVar), Span-Logs mit `span_typ`/`dauer_ms`/`status`, Run-Persistenz als JSON; an OTel-GenAI-Konvention angelehnt | [logging_config.py](../app/core/logging_config.py), [tests/test_trace_schema.py](../tests/test_trace_schema.py) |
 | Tool-Calling-Sicherheit / Lethal Trifecta (VL03) | Trifecta-Analyse, minimale Angriffsfläche, Untrusted-Delimiter, Excessive-Agency-Deckel, Query-Logging, Injection-Test | [sicherheit.md](sicherheit.md), [tests/test_sicherheit.py](../tests/test_sicherheit.py) |
@@ -550,6 +657,35 @@ Ehrlich und konkret — je mit dem Schritt, der production-tauglich anders wäre
    Lektion aus § 2.4 und [§ 6 Punkt 3](#6-was-wir-anders-machen-würden).
    *Production:* programmatische Antwort-/Trajektorien-Validierung nach jedem
    Lauf mit Korrekturschleife.
+9. **Wochenpläne dauern Minuten, nicht Sekunden.** Ein Plan reiht pro Gericht
+   Recherche → Rezeptwahl → kcal-Check → ggf. Revision aneinander; im Eval sind
+   das real **188 s** (`wochenplan_3_kcal`) bis **287 s**
+   (`schwer_kombi_constraints`) pro Lauf ([eval_report.md](evidence/eval_report.md)).
+   Das ist keine Optimierungslücke, sondern die Folge sequenzieller LLM-Aufrufe
+   im Groq-Free-Tier. Konsequenzen im System: Client-Timeout von 10 Minuten in
+   der GUI, ein Gerichte-Deckel von 7, und wenn das Token-Budget mitten im Lauf
+   knapp wird, liefert der Workflow **einen Teilplan statt eines Fehlers** —
+   sichtbar gemacht über `anzahl_angefragt` („Nur 2 von 4 Gerichten geplant").
+   *Production:* bezahltes Kontingent, Parallelisierung je Gericht und ein
+   asynchroner Job mit Fortschrittsanzeige statt eines blockierenden Requests.
+10. **Kein Bestätigungs-Gate bei der Bilderkennung.** Die erkannten Zutaten
+   werden transparent angezeigt, aber der Agent startet im selben Request — der
+   Nutzer kann eine Fehlerkennung erst *nachträglich* sehen und die Anfrage
+   wiederholen. Die VL nennt Human-in-the-Loop für kritische Anwendungen Pflicht;
+   für Rezeptvorschläge (keine destruktive Aktion) haben wir bewusst auf
+   Transparenz statt auf ein Gate gesetzt. *Production:* zweistufiger Flow —
+   Foto hochladen, erkannte Zutaten editierbar bestätigen, dann erst suchen.
+11. **Weiche Vorgaben greifen im Wochenplan-Pfad nicht.** Modus („nur vorhandene
+   Zutaten"), Freitext-Anmerkungen und die Geschmacksauswahl wirken nur im
+   Einzelrezept-Pfad; `plane_woche` bekommt bewusst nur Nachricht, Plan-Parameter,
+   **harte** Ernährungsvorgaben und vorhandene Zutaten. Das Sicherheitskritische
+   (vegan/glutenfrei) greift also überall, der Komfort nicht.
+   *Production:* alle Eingabekanäle einheitlich durchreichen.
+12. **Die Ablagen sind Single-User und ohne Undo.** Kochbuch und Wochenpläne
+   liegen als JSON-Dateien ohne Nutzertrennung; `DELETE` ist sofort und
+   unwiderruflich, manuell angelegte Rezepte werden inhaltlich nicht geprüft.
+   Für einen lokal betriebenen Haushalt ist das angemessen, für Mehrbenutzer-
+   Betrieb nicht. *Production:* Accounts, Soft-Delete, Eingabevalidierung.
 
 ## 6. Was wir anders machen würden
 

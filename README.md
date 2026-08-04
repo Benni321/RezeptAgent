@@ -19,11 +19,15 @@ entscheidet.
 - Kalorien-Vorgaben prüfen (`naehrwerte_schaetzen`) und Mengen exakt auf die
   Personenzahl umrechnen (`portionen_skalieren`)
 - Wochenplan: mehrere Gerichte mit garantierter `plan→prüfe→revidiere`-Schleife
-  und einer gemeinsamen Einkaufsliste
+  und einer gemeinsamen Einkaufsliste — speicherbar und später wieder abrufbar
+- Wochenplan **ohne Agenten**: Gerichte selbst aus dem Kochbuch wählen, angeben
+  was zuhause ist → Einkaufsliste sofort, ganz ohne LLM-Aufruf (0 Tokens)
 - Persönliches Kochbuch (RAG): gut bewertete Rezepte (≥ 4 Sterne) werden
-  Wissensbasis und bei Bezug auf Bewährtes zuerst durchsucht
+  Wissensbasis und bei Bezug auf Bewährtes zuerst durchsucht; eigene Rezepte
+  lassen sich manuell anlegen und wieder löschen
 - Memory: Onboarding-Profil (harte Ernährungs-Vorgaben, weiche Vorlieben) +
   Sterne-Bewertungen
+- Mehrseiten-GUI: Rezept finden · Mein Kochbuch · Meine Wochenpläne · Mein Profil
 
 ## Architektur
 
@@ -66,13 +70,18 @@ isoliertem Kontext sucht und nur eine kompakte Rezeptliste zurückgibt
 wegen nativer ReAct-Unterstützung, einfacher Tool-Integration und guter
 Erweiterbarkeit für Multi-Agent-Setups.
 
-**Modell:** Groq `qwen/qwen3.6-27b` (Text **und** Vision — ein multimodales
-Modell, eine Deprecation-Quelle) — kostenlos, schnell und mit **zuverlässigem
-Tool-Calling**; erarbeitet nach realen Fehlversuchen mit `llama-3.3-70b`
-(defektes Tool-Call-Format auf Groq) und `gpt-oss-120b` (zu langsam für den
-Wochenplan). Das zuvor genutzte `qwen/qwen3-32b` hat Groq im Juli 2026
-zurückgezogen (Modell-Drift, siehe [reflexion_drift](docs/reflexion_drift.md)).
-Umstellbar über `GROQ_MODEL`. Details:
+**Modelle (bewusster Split):** Orchestrator, Wochenplan-Workflow und die
+Recherche laufen auf Groq `qwen/qwen3.6-27b` (`GROQ_MODEL`) — multimodal, deckt
+also auch die Bilderkennung ab. Die **Nährwert-Schätzung** nutzt dagegen das
+kleine `llama-3.1-8b-instant` (`GROQ_MODEL_KLEIN`): ein Prompt, ein JSON, kein
+Tool-Calling — und **Groqs Rate-Limits gelten pro Modell**, der Split entlastet
+also das Budget des Hauptmodells. Dass der Recherche-Sub-Agent *nicht* auf dem
+kleinen Modell läuft, ist ein gemessenes Ergebnis, kein Versehen (A/B-Vergleich
+in [PROJEKTDOKU § 2.2](docs/PROJEKTDOKU.md#22-orchestrator-langgraph-react--framework--und-modellwahl)). Die Modellwahl selbst ist
+erarbeitet, nicht geraten: `llama-3.3-70b` erzeugte auf Groq ein defektes
+Tool-Call-Format, `gpt-oss-120b` war für den Wochenplan zu langsam, und das
+zuvor genutzte `qwen/qwen3-32b` hat Groq im Juli 2026 zurückgezogen
+(Modell-Drift, siehe [reflexion_drift](docs/reflexion_drift.md)). Details:
 [PROJEKTDOKU § 2.2](docs/PROJEKTDOKU.md#22-orchestrator-langgraph-react--framework--und-modellwahl).
 
 ## Designentscheidungen — wo sie stehen
@@ -175,13 +184,24 @@ RezeptAgent/
 │   │   ├── agent_service.py       # zentrale Ausführung + Routing + TAO-Trace
 │   │   ├── wochenplan_workflow.py # code-orchestrierter Wochenplan (plan→prüfe→revidiere)
 │   │   ├── praeferenzen.py        # Memory: Geschmacksprofil + Bewertungen
-│   │   ├── text_utils.py          # Reasoning-Filter (<think>) für Modell-Ausgaben
+│   │   ├── wochenplaene.py        # Ablage gespeicherter Wochenpläne (JSON pro Plan)
+│   │   ├── text_utils.py          # Reasoning-Filter (<think>) + Rezepttitel-Extraktion
 │   │   └── logging_config.py      # strukturiertes JSON-Logging          [W5]
 │   └── api/
-│       ├── main.py              # FastAPI: /chat, /health, /praeferenzen, /bewertung [W6/W11]
+│       ├── main.py              # FastAPI: 12 Endpunkte (/chat, /health, /kochbuch, /wochenplan …) [W6/W11]
 │       └── schemas.py           # Pydantic-Validierung                  [W9]
-├── data/rezepte/                # Kochbuch-Wissensbasis: seed_* (mitgeliefert) + gelernt_*
-├── streamlit_app.py             # grafische Oberfläche (GUI)
+├── seiten/                      # Streamlit-Mehrseiten-GUI
+│   ├── start.py                 #   Startseite: was das System kann
+│   ├── rezept_finden.py         #   Anfrage an den Agenten + TAO-Trace + Bewertung
+│   ├── mein_kochbuch.py         #   Wissensbasis ansehen / anlegen / löschen [W3]
+│   ├── meine_wochenplaene.py    #   Pläne ansehen + Plan aus dem Kochbuch (ohne LLM)
+│   ├── mein_profil.py           #   Profil bearbeiten + Bewertungen
+│   └── _gemeinsam.py            #   API_URL, Auswahl-Listen, Gericht-Anzeige
+├── data/
+│   ├── rezepte/                 # Kochbuch-Wissensbasis: seed_* (mitgeliefert) + gelernt_*/manuell
+│   └── wochenplaene/            # gespeicherte Wochenpläne (Laufzeit-Daten)
+├── streamlit_app.py             # GUI-Einstiegspunkt (st.navigation)
+├── .streamlit/config.toml       # GUI-Theme
 ├── scripts/                     # Evidence-Generatoren (Referenz-/Vision-/Wochenplan-Traces)
 ├── evals/                       # Offline-Eval: Testset, Verifier, Runner (VL09)
 ├── tests/                       # Unit-/Integrationstests               [W8]

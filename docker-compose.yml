@@ -8,11 +8,19 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    volumes:
+      # Gelernte Daten muessen den Container ueberleben: Profil, Bewertungen,
+      # Kochbuch-Rezepte (W3/W13) und gespeicherte Wochenplaene liegen als
+      # JSON-Dateien unter data/. Ohne dieses Volume waere nach
+      # `docker compose down` genau das weg, was Continual Learning ausmacht.
+      - ./data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      # Zeit fuer den ersten Start (Imports von langchain/langgraph dauern)
+      start_period: 20s
 
   ui:
     build: .
@@ -23,5 +31,11 @@ services:
       - API_URL=http://api:8000
     env_file:
       - .env
+    volumes:
+      # Dieselbe Ablage wie die API -- die GUI zeigt Kochbuch/Wochenplaene an.
+      - ./data:/app/data
     depends_on:
-      - api
+      # Erst starten, wenn die API wirklich antwortet (nicht nur "Container laeuft"),
+      # sonst zeigt die GUI beim ersten Aufruf "Backend nicht erreichbar".
+      api:
+        condition: service_healthy
