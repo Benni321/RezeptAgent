@@ -282,7 +282,7 @@ if "ergebnis" in st.session_state:
         rezept_name = st.text_input("Rezept", value=st.session_state.get("titel", "Rezept"))
         sterne = st.slider("Bewertung (Sterne)", 1, 5, 4)
         st.caption("Ab 4 Sternen wandert das Rezept in dein persönliches Kochbuch (Seite „Mein Kochbuch“) – der Agent kann es dann wiederfinden („koch mir eines meiner Lieblingsrezepte“).")
-        if st.button("Bewertung speichern"):
+        if st.button("Rezept speichern"):
             try:
                 antwort_b = requests.post(
                     f"{API_URL}/bewertung",
