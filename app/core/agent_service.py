@@ -243,6 +243,15 @@ def _fuehre_lauf_aus(
                     elif msg.content and msg.content.strip():
                         antwort = entferne_reasoning(msg.content)
                         log_span(logger, "antwort", "finale_antwort", dauer_ms=_dauer_ms(t_letztes))
+                    elif not antwort:
+                        # Modell beendet die ReAct-Schleife (kein Tool-Call mehr), liefert
+                        # dabei aber eine leere Nachricht -- real unter Last beobachtet
+                        # (HTTP 200, aber keine sichtbare Antwort, kein geloggter Fehler).
+                        # Gleiches Muster wie RECHERCHE-FEHLER/NAEHRWERT-FEHLER: der
+                        # Fehlschlag wird sichtbar, statt still im Leeren zu verpuffen.
+                        antwort = "Der Agent konnte keine Antwort formulieren (leere Modellantwort)."
+                        log_span(logger, "antwort", "finale_antwort",
+                                 dauer_ms=_dauer_ms(t_letztes), status="fehler")
                 elif msg_type == "ToolMessage":
                     quelle = "Sub-Agent" if msg.name in SUB_AGENTEN else "Tool"
                     inhalt = msg.content or ""

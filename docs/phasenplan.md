@@ -1,6 +1,17 @@
 # Phasenplan — RezeptAgent
 
-*Stand: 2026-06-02 · Applied AI SS26 · HTWG Konstanz*
+*Stand: 2026-08-07 · Applied AI SS26 · HTWG Konstanz*
+
+> **Update 2026-08-07:** Seither dazugekommen: Mehrseiten-GUI (`seiten/`),
+> Modell-Split (`GROQ_MODEL_KLEIN` für Recherche-Sub-Agent) und sechs neue
+> API-Endpunkte für Kochbuch/Wochenplan-Verwaltung — Details in
+> [PROJEKTDOKU.md](PROJEKTDOKU.md) und [bewertungsmatrix.md](bewertungsmatrix.md).
+> Docker-Deployment (W7) real getestet: Build, Health-Check, GUI und
+> Daten-Persistenz über einen vollen Container-Neustart funktionieren. Dabei
+> ein echter Fund: Der Orchestrator konnte die ReAct-Schleife mit einer leeren
+> Modellantwort ohne Tool-Call beenden, ohne dass irgendwo ein Fehler sichtbar
+> wurde (`agent_service.py`) — behoben, jetzt eine sichtbare Fehlermeldung
+> statt einer stummen Leerantwort; Regressionstest ergänzt.
 
 > **Update 2026-07-15:** Der Plan ist im Kern umgesetzt; eine Abweichung:
 > Phase 2b (RAG mit Chroma + Embeddings, Teampartner) wurde **bewusst ersetzt**
@@ -81,22 +92,6 @@ Agenten dadurch saubere, eindeutige Eingaben liefert.
 LangGraph (Agenten) · Groq (Text `qwen/qwen3-32b`, Vision = multimodales Llama-4-Modell) ·
 Tavily (Web) · Chroma (Vektor-DB).
 
----
-
-## Aktueller Stand (Phase 1 — erledigt)
-
-- LangGraph-ReAct-Agent (`create_react_agent`), Modell Groq `qwen/qwen3-32b`.
-- Ein echtes Tool: `web_search` (Tavily) → **P1** erfüllt.
-- TAO-Zyklus wird im Terminal sichtbar ausgegeben (`main.py`).
-- README mit Framework-Begründung → **P3/P4** weitgehend erfüllt.
-
-**Offene Baustellen aus Phase 1:**
-- TAO zeigt bei einer einzelnen Suche nur ~1 Zyklus → für **P2** (≥3 Iterationen) eine
-  repräsentative Eingabe definieren, die mehrere TAO-Schritte auslöst.
-- Erst **1 Commit** → ab jetzt feature-weise committen (**P5**: ≥10).
-- README-Inkonsistenz: nennt `OPENAI_API_KEY`, Code nutzt Groq → angleichen.
-
----
 
 ## Phasen
 
@@ -140,10 +135,3 @@ Tavily (Web) · Chroma (Vektor-DB).
   Ernährungssicherheit, Küchen-Bias, halluzinierte Rezepte).
 
 **Mit GUI + API decken wir bis zu 14 von 14 W ab** — alle fachlich begründet.
-
----
-
-## Was wir morgen im Fortschritts-Check zeigen
-1. **Stand:** Phase 1 läuft (Live-Terminal: Anfrage → TAO → Rezept).
-2. **Plan:** diese Zielarchitektur + Phasenplan (dieses Dokument), inkl. GUI-Vision.
-3. **Nächster Schritt:** RAG (2b) startet, Multi-Agent (2a) parallel.

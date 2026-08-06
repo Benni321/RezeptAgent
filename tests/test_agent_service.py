@@ -70,3 +70,19 @@ def test_run_rezept_agent_ohne_belastbaren_titel_gibt_none(monkeypatch):
     ergebnis = run_rezept_agent("Was kann ich mit Haehnchen kochen?")
 
     assert ergebnis["rezept_titel"] is None
+
+
+def test_run_rezept_agent_bei_leerer_finaler_nachricht_gibt_fallback(monkeypatch):
+    # Regression: Das Modell kann die ReAct-Schleife mit einer AIMessage OHNE
+    # Tool-Call UND ohne Inhalt beenden (real unter Rate-Limit-Last beobachtet,
+    # Docker-Test 2026-08-06). Ohne diesen Fallback blieb "antwort" stillschweigend
+    # leer -- HTTP 200, aber keine sichtbare Antwort, kein geloggter Fehler.
+    monkeypatch.setattr(agent_service, "create_orchestrator", lambda: _FakeAgent(""))
+    monkeypatch.setattr(agent_service.praeferenzen, "lade",
+                        lambda: {"ernaehrung": [], "geschmack": [], "wichtig": [], "bewertungen": {}})
+    monkeypatch.setattr(agent_service.praeferenzen, "als_kontext_text", lambda: "")
+
+    ergebnis = run_rezept_agent("Was kann ich mit Haehnchen kochen?")
+
+    assert ergebnis["antwort"] == "Der Agent konnte keine Antwort formulieren (leere Modellantwort)."
+    assert ergebnis["rezept_titel"] is None
